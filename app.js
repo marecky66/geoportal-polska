@@ -85,5 +85,7 @@ document.getElementById('searchForm').addEventListener('submit', async event => 
   showStatus('');
  } catch(e){showStatus(e.message || 'Nie udało się wyszukać adresu.'); console.error(e);}
  finally {searchBtn.disabled=false;}
-});
+    });
+}
+
 initLayers();
