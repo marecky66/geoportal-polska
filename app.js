@@ -26,9 +26,9 @@ async function initLayers() {
   if (borderToggle.checked) borderLayer.addTo(map);
  } catch(e) { borderToggle.disabled=true; showStatus('Błąd wczytania granicy Polski.'); console.error(e); }
  try {
-  const data = await loadGeoJSON('data/moja_warstwa.geojson');
+  const data = await loadGeoJSON('moja_warstwa.geojson');
   qgisLayer = L.geoJSON(data, {
-   style: { color:'#066d68', weight:2, fillColor:'#18a999', fillOpacity:.3 },
+   style: { color: '#964B00', weight: 2, fillColor: '#d99555', fillOpacity: 0.35 },
    pointToLayer: (_feature, latlng) => L.circleMarker(latlng, { radius:7,color:'#066d68', fillColor:'#18a999',fillOpacity:.8 }),
    onEachFeature(feature, layer) {
     const properties = feature.properties || {};
@@ -36,7 +36,8 @@ async function initLayers() {
     if (summary) layer.bindPopup(document.createTextNode(summary));
    }
   });
-  if(layerToggle.checked)qgisLayer.addTo(map);
+  qgisLayer.addTo(map);
+layerToggle.checked = true;
  } catch(e) { layerToggle.disabled=true; showStatus('Błąd wczytania warstwy QGIS.'); console.error(e); }
 }
 borderToggle.addEventListener('change', () => { if(borderLayer) borderToggle.checked? borderLayer.addTo(map):map.removeLayer(borderLayer); });
