@@ -89,3 +89,56 @@ document.getElementById('searchForm').addEventListener('submit', async event => 
     });
 
 initLayers();
+let citiesLayer = null;
+
+const citiesToggle = document.getElementById('citiesToggle');
+
+async function loadCities() {
+  try {
+    const response = await fetch('./miasta_300tys.geojson');
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    citiesLayer = L.geoJSON(data, {
+      style: {
+        color: '#0055AA',
+        weight: 2,
+        fillColor: '#3399FF',
+        fillOpacity: 0.45
+      },
+      onEachFeature: (feature, layer) => {
+        const props = feature.properties || {};
+        const name = props.JPT_NAZWA_ || props.name || 'Miasto';
+        layer.bindPopup(String(name));
+      }
+    });
+
+    if (citiesToggle.checked) {
+      citiesLayer.addTo(map);
+    }
+
+    console.log('Warstwa miast została wczytana.');
+
+  } catch (error) {
+    console.error('Błąd wczytywania miast:', error);
+    citiesToggle.checked = false;
+    citiesToggle.disabled = true;
+    showStatus('Nie udało się wczytać warstwy miast.');
+  }
+}
+
+citiesToggle.addEventListener('change', () => {
+  if (!citiesLayer) return;
+
+  if (citiesToggle.checked) {
+    citiesLayer.addTo(map);
+  } else {
+    map.removeLayer(citiesLayer);
+  }
+});
+
+loadCities();
