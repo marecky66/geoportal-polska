@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Geoportal Polska</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzx6ll2EwU9R/ttZSNpSVJXJw=" crossorigin="">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="map" aria-label="Mapa Polski"></div>
+<div class="panel">
+ <h1>Geoportal Polska</h1>
+ <form id="searchForm"><label for="address">Wyszukaj adres w Polsce</label><div class="search"><input id="address" type="search" placeholder="np. Marszałkowska 1, Warszawa" required minlength="3"><button type="submit" id="searchBtn">Szukaj</button></div></form>
+ <div id="message" role="status" aria-live="polite"></div>
+ <button type="button" id="resetBtn" class="secondary">↩ Cała Polska</button>
+ <label class="check"><input type="checkbox" id="borderToggle" checked> Granica Polski</label>
+ <label class="check"><input type="checkbox" id="layerToggle"> Moja warstwa QGIS (przykład)</label>
+ <p class="hint">Warstwa przykładowa przedstawia dwa demonstracyjne obszary. Zastąp plik <code>data/moja_warstwa.geojson</code> własnym eksportem z QGIS.</p>
+</div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script src="app.js"></script>
+</body>
+</html>
