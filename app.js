@@ -101,9 +101,16 @@ async function loadCities() {
       throw new Error(`HTTP ${response.status}`);
     }
 
-    const data = await response.json();
+const data = await response.json();
 
-    citiesLayer = L.geoJSON(data, {
+// Osobna warstwa rysowania dla miast
+if (!map.getPane('citiesPane')) {
+  map.createPane('citiesPane');
+  map.getPane('citiesPane').style.zIndex = 450;
+}
+
+citiesLayer = L.geoJSON(data, {
+  pane: 'citiesPane',
       style: {
         color: '#0055AA',
         weight: 2,
@@ -117,9 +124,10 @@ async function loadCities() {
       }
     });
 
-    if (citiesToggle.checked) {
-      citiesLayer.addTo(map);
-    }
+ if (citiesToggle.checked) {
+  citiesLayer.addTo(map);
+  citiesLayer.bringToFront();
+}
 
     console.log('Warstwa miast została wczytana.');
 
