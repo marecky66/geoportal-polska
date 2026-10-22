@@ -42,7 +42,6 @@ layerToggle.checked = true;
 map.fitBounds(qgisLayer.getBounds(), {
   padding: [20, 20]
 });
-showStatus('Bufory 30 km zostały wczytane');
 } catch(e) {
   layerToggle.disabled = true;
   showStatus('Błąd: ' + e.message);
