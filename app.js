@@ -36,9 +36,17 @@ async function initLayers() {
     if (summary) layer.bindPopup(document.createTextNode(summary));
    }
   });
-  qgisLayer.addTo(map);
+ qgisLayer.addTo(map);
 layerToggle.checked = true;
- } catch(e) { layerToggle.disabled=true; showStatus('Błąd wczytania warstwy QGIS.'); console.error(e); }
+
+map.fitBounds(qgisLayer.getBounds(), {
+  padding: [20, 20]
+});
+showStatus('Bufory 30 km zostały wczytane');
+} catch(e) {
+  layerToggle.disabled = true;
+  showStatus('Błąd: ' + e.message);
+  console.error(e);
 }
 borderToggle.addEventListener('change', () => { if(borderLayer) borderToggle.checked? borderLayer.addTo(map):map.removeLayer(borderLayer); });
 layerToggle.addEventListener('change', () => { if(qgisLayer) layerToggle.checked? qgisLayer.addTo(map):map.removeLayer(qgisLayer); });
