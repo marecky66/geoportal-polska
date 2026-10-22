@@ -48,6 +48,7 @@ showStatus('Bufory 30 km zostały wczytane');
   showStatus('Błąd: ' + e.message);
   console.error(e);
 }
+}  
 borderToggle.addEventListener('change', () => { if(borderLayer) borderToggle.checked? borderLayer.addTo(map):map.removeLayer(borderLayer); });
 layerToggle.addEventListener('change', () => { if(qgisLayer) layerToggle.checked? qgisLayer.addTo(map):map.removeLayer(qgisLayer); });
 document.getElementById('resetBtn').addEventListener('click', () => {
@@ -86,6 +87,5 @@ document.getElementById('searchForm').addEventListener('submit', async event => 
  } catch(e){showStatus(e.message || 'Nie udało się wyszukać adresu.'); console.error(e);}
  finally {searchBtn.disabled=false;}
     });
-}
 
 initLayers();
