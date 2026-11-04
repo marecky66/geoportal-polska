@@ -213,24 +213,4 @@ document.addEventListener('drk:location-selected', function (e) {
 });
 
 
-  // Usunięcie poprzedniego znacznika
-  if (clickedMarker) {
-    map.removeLayer(clickedMarker);
-  }
-
-  // Dodanie nowej pinezki
-  clickedMarker = L.circleMarker([lat, lon], {
-    radius: 7,
-    color: '#ffffff',
-    weight: 2,
-    fillColor: '#e63946',
-    fillOpacity: 1
-  }).addTo(map);
-
-  clickedMarker.bindTooltip(
-    `Wskazany punkt: ${lat.toFixed(5)}, ${lon.toFixed(5)}`
-  ).openTooltip();
-});
-
-
 /* WMS Wody Polskie — powódź Q10% */
