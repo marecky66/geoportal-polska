@@ -23,7 +23,10 @@
  <label class="check"><input type="checkbox" id="borderToggle" checked> Granica Polski</label>
  <label class="check"><input type="checkbox" id="layerToggle"> Odległość 30 km od granic miast powyżej 300tys mieszk.</label>
  <label class="check"><input type="checkbox" id="citiesToggle" checked> Miasta wojewódzkie</label>
- <label class="check"><input type="checkbox" id="floodingToggle"> Podtopienia PIG — Mazowsze</label>
+<label class="check">
+  <input type="checkbox" id="floodingToggle">
+  Podtopienia PIG — WMS (Polska)
+</label>
   <label class="check">
   <input type="checkbox" id="powodz10Toggle">
   Powódź Q10% — Wody Polskie
@@ -71,7 +74,7 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script src="app.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6.5.0/turf.min.js"></script>
-<script src="podtopienia.js"></script>
+<script src="podtopienia_wms.js"></script>
   <script src="powodz10.js"></script>
   <script src="powodzie_extra.js"></script>
 </body>
