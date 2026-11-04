@@ -169,11 +169,49 @@ loadCities();
 
 /* Oznaczenie punktu kliknięcia na mapie */
 
+
+/* Oznaczenie analizowanego punktu */
+
+// Osobna warstwa nad wszystkimi WMS
+map.createPane('analysisMarkerPane');
+map.getPane('analysisMarkerPane').style.zIndex = 700;
+map.getPane('analysisMarkerPane').style.pointerEvents = 'none';
+
 let clickedMarker = null;
 
+function showClickedMarker(lat, lon) {
+  if (clickedMarker) {
+    map.removeLayer(clickedMarker);
+  }
+
+  clickedMarker = L.circleMarker([lat, lon], {
+    pane: 'analysisMarkerPane',
+    radius: 9,
+    color: '#ffffff',
+    weight: 3,
+    fillColor: '#e63946',
+    fillOpacity: 1,
+    interactive: false
+  }).addTo(map);
+
+  console.log('Zaznaczono punkt:', lat, lon);
+}
+
+// Kliknięcie w mapę
 map.on('click', function (e) {
-  const lat = e.latlng.lat;
-  const lon = e.latlng.lng;
+  showClickedMarker(e.latlng.lat, e.latlng.lng);
+});
+
+// Wyszukanie adresu
+document.addEventListener('drk:location-selected', function (e) {
+  const lat = Number(e.detail?.lat);
+  const lon = Number(e.detail?.lon);
+
+  if (Number.isFinite(lat) && Number.isFinite(lon)) {
+    showClickedMarker(lat, lon);
+  }
+});
+
 
   // Usunięcie poprzedniego znacznika
   if (clickedMarker) {
