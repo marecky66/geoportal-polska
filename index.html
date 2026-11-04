@@ -5,6 +5,13 @@
 <title>Geoportal DRK</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
 <link rel="stylesheet" href="./style.css">
+<style>
+  .risk-title {font-weight:700;color:#15384d;font-size:14px;margin:13px 0 6px}
+  .risk-box {font-size:13px;line-height:1.45;padding:10px;border:1px solid #d3dee5;border-radius:8px;background:#f7fafc;color:#233b49}
+  .risk-box[data-level="yes"] {border-color:#de9a92;background:#fff1ef}
+  .risk-box[data-level="no"] {border-color:#9abca6;background:#effaf2}
+  .risk-box[data-level="unknown"] {border-color:#d3dee5;background:#f7fafc}
+</style>
 </head>
 <body>
 <div id="map" aria-label="Mapa Polski"></div>
@@ -16,8 +23,13 @@
  <label class="check"><input type="checkbox" id="borderToggle" checked> Granica Polski</label>
  <label class="check"><input type="checkbox" id="layerToggle"> Odległość 30 km od granic miast powyżej 300tys mieszk.</label>
  <label class="check"><input type="checkbox" id="citiesToggle" checked> Miasta wojewódzkie</label>
+ <label class="check"><input type="checkbox" id="floodingToggle"> Podtopienia PIG — Mazowsze</label>
+ <div class="risk-title">Ocena wskazanej lokalizacji</div>
+ <div id="floodingResult" class="risk-box" data-level="unknown" role="status" aria-live="polite">Kliknij punkt na mapie lub wyszukaj adres.</div>
 </div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script src="app.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@turf/turf@6.5.0/turf.min.js"></script>
+<script src="podtopienia.js"></script>
 </body>
 </html>
