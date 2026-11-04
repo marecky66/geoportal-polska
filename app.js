@@ -149,3 +149,31 @@ citiesToggle.addEventListener('change', () => {
 });
 
 loadCities();
+
+/* WMS Wody Polskie — powódź Q10% */
+
+const powodz10WMS = L.tileLayer.wms(
+  'https://wody.isok.gov.pl/gpservices/KZGW/MZP20_Glebokosc_WysokiePrawdopodPowodzi/MapServer/WMSServer',
+  {
+    layers: '1',
+    format: 'image/png',
+    transparent: true,
+    version: '1.3.0',
+    opacity: 0.7,
+    attribution: 'PGW Wody Polskie'
+  }
+);
+
+const powodz10Toggle =
+  document.getElementById('powodz10Toggle');
+
+if (powodz10Toggle) {
+  powodz10Toggle.addEventListener('change', () => {
+    if (powodz10Toggle.checked) {
+      powodz10WMS.addTo(map);
+    } else {
+      map.removeLayer(powodz10WMS);
+    }
+  });
+}
+
