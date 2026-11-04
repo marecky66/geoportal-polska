@@ -211,6 +211,3 @@ document.addEventListener('drk:location-selected', function (e) {
     showClickedMarker(lat, lon);
   }
 });
-
-
-/* WMS Wody Polskie — powódź Q10% */
