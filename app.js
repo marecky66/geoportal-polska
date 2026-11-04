@@ -82,6 +82,13 @@ document.getElementById('searchForm').addEventListener('submit', async event => 
   const label = document.createElement('div');label.textContent = safeText(result.display_name);
   marker.bindPopup(label).openPopup();
   map.setView([lat,lon],17,{animate:true});
+   
+document.dispatchEvent(
+  new CustomEvent('drk:location-selected', {
+    detail: { lat, lon }
+  })
+);
+
   showStatus('');
  } catch(e){showStatus(e.message || 'Nie udało się wyszukać adresu.'); console.error(e);}
  finally {searchBtn.disabled=false;}
@@ -151,33 +158,3 @@ citiesToggle.addEventListener('change', () => {
 loadCities();
 
 /* WMS Wody Polskie — powódź Q10% */
-
-
-/* Powódź Q10% — Wody Polskie */
-
-const wmsURL =
-  'https://wody.isok.gov.pl/gpservices/KZGW/MZP20_Glebokosc_WysokiePrawdopodPowodzi/MapServer/WMSServer';
-
-// Warstwa głębokości wody — kolorowa prezentacja
-const powodz10WMS = L.tileLayer.wms(wmsURL, {
-  layers: '1,2',
-  format: 'image/png',
-  transparent: true,
-  version: '1.3.0',
-  opacity: 0.7,
-  attribution: 'PGW Wody Polskie'
-});
-
-const powodz10Toggle =
-  document.getElementById('powodz10Toggle');
-
-if (powodz10Toggle) {
-  powodz10Toggle.addEventListener('change', () => {
-    if (powodz10Toggle.checked) {
-      powodz10WMS.addTo(map);
-    } else {
-      map.removeLayer(powodz10WMS);
-    }
-  });
-}
-
