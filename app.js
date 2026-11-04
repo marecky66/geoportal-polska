@@ -82,20 +82,17 @@ document.getElementById('searchForm').addEventListener('submit', async event => 
   const label = document.createElement('div');label.textContent = safeText(result.display_name);
   marker.bindPopup(label).openPopup();
 
-map.setView([lat, lon], 17, {animate: true});
 
-// Uruchomienie analizy WMS Q10%
-// dla znalezionego adresu
+map.setView([lat, lon], 17, { animate: true });
+
 document.dispatchEvent(
   new CustomEvent('drk:location-selected', {
-    detail: {
-      lat: lat,
-      lon: lon
-    }
+    detail: { lat, lon }
   })
 );
 
 showStatus('');
+
  } catch(e){showStatus(e.message || 'Nie udało się wyszukać adresu.'); console.error(e);}
  finally {searchBtn.disabled=false;}
     });
