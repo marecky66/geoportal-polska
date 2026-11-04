@@ -81,8 +81,16 @@
     update('Sprawdzanie podtopień PIG (GetFeatureInfo)…');
     const timeout = setTimeout(() => controller.abort(), 15000);
     try {
-      const url = featureInfoURL(lat, lon, 'application/geojson');
-      const response = await fetch(url, { signal, headers: { Accept: 'application/geojson, application/json' } });
+      
+const url = featureInfoURL(lat, lon, 'application/geo+json');
+
+const response = await fetch(url, {
+  signal,
+  headers: {
+    Accept: 'application/geo+json, application/json'
+  }
+});
+
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const responseText = await response.text();
       let json;
