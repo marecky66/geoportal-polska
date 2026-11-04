@@ -30,11 +30,13 @@ async function initLayers() {
   qgisLayer = L.geoJSON(data, {
    style: { color: '#964B00', weight: 2, fillColor: '#d99555', fillOpacity: 0.35 },
    pointToLayer: (_feature, latlng) => L.circleMarker(latlng, { radius:7,color:'#066d68', fillColor:'#18a999',fillOpacity:.8 }),
-   onEachFeature(feature, layer) {
-    const properties = feature.properties || {};
-    const summary = Object.entries(properties).slice(0, 12).map(([k,v]) => `${safeText(k)}: ${safeText(v)}`).join('\n');
-    if (summary) layer.bindPopup(document.createTextNode(summary));
-   }
+
+onEachFeature(feature, layer) {
+  layer.bindPopup(
+    '<strong>Odległość 30 km od granic miast powyżej 300tys mieszk.</strong>'
+  );
+}
+
   });
  qgisLayer.addTo(map);
 layerToggle.checked = true;
