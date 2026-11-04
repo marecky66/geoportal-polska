@@ -152,17 +152,21 @@ loadCities();
 
 /* WMS Wody Polskie — powódź Q10% */
 
-const powodz10WMS = L.tileLayer.wms(
-  'https://wody.isok.gov.pl/gpservices/KZGW/MZP20_Glebokosc_WysokiePrawdopodPowodzi/MapServer/WMSServer',
-  {
-    layers: '1',
-    format: 'image/png',
-    transparent: true,
-    version: '1.3.0',
-    opacity: 0.7,
-    attribution: 'PGW Wody Polskie'
-  }
-);
+
+/* Powódź Q10% — Wody Polskie */
+
+const wmsURL =
+  'https://wody.isok.gov.pl/gpservices/KZGW/MZP20_Glebokosc_WysokiePrawdopodPowodzi/MapServer/WMSServer';
+
+// Warstwa głębokości wody — kolorowa prezentacja
+const powodz10WMS = L.tileLayer.wms(wmsURL, {
+  layers: '1,2',
+  format: 'image/png',
+  transparent: true,
+  version: '1.3.0',
+  opacity: 0.7,
+  attribution: 'PGW Wody Polskie'
+});
 
 const powodz10Toggle =
   document.getElementById('powodz10Toggle');
