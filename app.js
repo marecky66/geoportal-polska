@@ -53,7 +53,13 @@ layerToggle.addEventListener('change', () => { if(qgisLayer) layerToggle.checked
 document.getElementById('resetBtn').addEventListener('click', () => {
  if(marker){map.removeLayer(marker);marker=null;}
  document.getElementById('address').value=''; showStatus('');
- map.fitBounds(POLAND_VIEW, {padding:[15,15]});
+ 
+if (clickedMarker) {
+  map.removeLayer(clickedMarker);
+  clickedMarker = null;
+}
+
+  map.fitBounds(POLAND_VIEW, {padding:[15,15]});
 });
 const cache = new Map();
 let lastSearchAt = 0;
@@ -159,5 +165,34 @@ citiesToggle.addEventListener('change', () => {
 });
 
 loadCities();
+
+
+/* Oznaczenie punktu kliknięcia na mapie */
+
+let clickedMarker = null;
+
+map.on('click', function (e) {
+  const lat = e.latlng.lat;
+  const lon = e.latlng.lng;
+
+  // Usunięcie poprzedniego znacznika
+  if (clickedMarker) {
+    map.removeLayer(clickedMarker);
+  }
+
+  // Dodanie nowej pinezki
+  clickedMarker = L.circleMarker([lat, lon], {
+    radius: 7,
+    color: '#ffffff',
+    weight: 2,
+    fillColor: '#e63946',
+    fillOpacity: 1
+  }).addTo(map);
+
+  clickedMarker.bindTooltip(
+    `Wskazany punkt: ${lat.toFixed(5)}, ${lon.toFixed(5)}`
+  ).openTooltip();
+});
+
 
 /* WMS Wody Polskie — powódź Q10% */
