@@ -21,17 +21,18 @@
  <div id="message" role="status" aria-live="polite"></div>
  <button type="button" id="resetBtn" class="secondary">↩ Cała Polska</button>
  <label class="check"><input type="checkbox" id="borderToggle" checked> Granica Polski</label>
-<label class="check"><input type="checkbox" id="layerToggle"> Odległość 30 km od granic miast powyżej 300tys mieszk.</label>
-<label class="check"><input type="checkbox" id="citiesToggle"> Miasta wojewódzkie</label>
+<label class="check"><input type="checkbox" id="layerToggle" checked> Odległość 30 km od granic miast powyżej 300tys mieszk.</label>
+<label class="check"><input type="checkbox" id="citiesToggle" checked> Miasta wojewódzkie</label>
 <label class="check">
   <input type="checkbox" id="floodingToggle">
-  Podtopienia PIG — WMS (Polska)
+  Podtopienia — PIG
 </label>
-  <label class="check">
+
+<label class="check">
   <input type="checkbox" id="powodz10Toggle">
-  Powódź Q10% — Wody Polskie
+  Powódź Q10% (10-letnia) — Wody Polskie
 </label>
-  
+
 <label class="check">
   <input type="checkbox" id="powodz100Toggle">
   Powódź Q1% (100-letnia) — Wody Polskie
@@ -42,7 +43,7 @@
   Powódź Q0,2% (500-letnia) — Wody Polskie
 </label>
 
- <div class="risk-title">Ocena wskazanej lokalizacji</div>
+ <div class="risk-title">Podtopienia - ocena WMS</div>
  <div id="floodingResult" class="risk-box" data-level="unknown" role="status" aria-live="polite">Kliknij punkt na mapie lub wyszukaj adres.</div>
   
 <div class="risk-title">Powódź Q10% — ocena WMS</div>
@@ -51,7 +52,7 @@
      data-level="unknown"
      role="status"
      aria-live="polite">
-  Kliknij mapę lub wyszukaj adres.
+  Kliknij punkt na mapie lub wyszukaj adres.
 </div>
   <div class="risk-title">Powódź Q1% — ocena WMS</div>
 <div id="powodz100Result"
@@ -59,7 +60,7 @@
      data-level="unknown"
      role="status"
      aria-live="polite">
-  Kliknij mapę lub wyszukaj adres.
+  Kliknij punkt na mapie lub wyszukaj adres.
 </div>
 
 <div class="risk-title">Powódź Q0,2% — ocena WMS</div>
@@ -68,7 +69,7 @@
      data-level="unknown"
      role="status"
      aria-live="polite">
-  Kliknij mapę lub wyszukaj adres.
+  Kliknij punkt na mapie lub wyszukaj adres.
 </div>
 </div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
