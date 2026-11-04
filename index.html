@@ -28,11 +28,39 @@
   <input type="checkbox" id="powodz10Toggle">
   Powódź Q10% — Wody Polskie
 </label>
+  
+<label class="check">
+  <input type="checkbox" id="powodz100Toggle">
+  Powódź Q1% (100-letnia) — Wody Polskie
+</label>
+
+<label class="check">
+  <input type="checkbox" id="powodz500Toggle">
+  Powódź Q0,2% (500-letnia) — Wody Polskie
+</label>
+
  <div class="risk-title">Ocena wskazanej lokalizacji</div>
  <div id="floodingResult" class="risk-box" data-level="unknown" role="status" aria-live="polite">Kliknij punkt na mapie lub wyszukaj adres.</div>
   
 <div class="risk-title">Powódź Q10% — ocena WMS</div>
 <div id="powodz10Result"
+     class="risk-box"
+     data-level="unknown"
+     role="status"
+     aria-live="polite">
+  Kliknij mapę lub wyszukaj adres.
+</div>
+  <div class="risk-title">Powódź Q1% — ocena WMS</div>
+<div id="powodz100Result"
+     class="risk-box"
+     data-level="unknown"
+     role="status"
+     aria-live="polite">
+  Kliknij mapę lub wyszukaj adres.
+</div>
+
+<div class="risk-title">Powódź Q0,2% — ocena WMS</div>
+<div id="powodz500Result"
      class="risk-box"
      data-level="unknown"
      role="status"
@@ -45,5 +73,6 @@
 <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6.5.0/turf.min.js"></script>
 <script src="podtopienia.js"></script>
   <script src="powodz10.js"></script>
+  <script src="powodzie_extra.js"></script>
 </body>
 </html>
