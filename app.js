@@ -3,10 +3,43 @@
 const map = L.map('map', { zoomControl: true, maxZoom: 19 });
 const POLAND_VIEW = [[49.0, 14.0], [54.9, 24.3]];
 map.fitBounds(POLAND_VIEW, { padding: [15, 15] });
-L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>',
-  maxZoom: 19
-}).addTo(map);
+
+/* Podkłady mapowe */
+
+const basemaps = {
+  osm: L.tileLayer(
+    'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+    {
+      maxZoom: 19,
+      attribution: '&copy; OpenStreetMap contributors'
+    }
+  ),
+
+  satelita: L.tileLayer(
+    'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    {
+      maxZoom: 19,
+      attribution: 'Tiles &copy; Esri and contributors'
+    }
+  )
+};
+
+// Domyślny podkład
+basemaps.osm.addTo(map);
+
+// Zmiana podkładu
+function changeBasemap(name) {
+  Object.values(basemaps).forEach(layer => {
+    if (map.hasLayer(layer)) {
+      map.removeLayer(layer);
+    }
+  });
+
+  if (basemaps[name]) {
+    basemaps[name].addTo(map);
+  }
+}
+
 L.control.scale({ imperial: false }).addTo(map);
 const statusEl = document.getElementById('message');
 const borderToggle = document.getElementById('borderToggle');
