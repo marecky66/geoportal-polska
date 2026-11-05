@@ -11,6 +11,37 @@
   .risk-box[data-level="yes"] {border-color:#de9a92;background:#fff1ef}
   .risk-box[data-level="no"] {border-color:#9abca6;background:#effaf2}
   .risk-box[data-level="unknown"] {border-color:#d3dee5;background:#f7fafc}
+  .risk-heading {
+  font-size: 16px;
+  font-weight: 700;
+  color: #15384d;
+  margin: 20px 0 12px;
+  line-height: 1.35;
+}
+
+.risk-box {
+  font-weight: 600;
+}
+
+.risk-box[data-level="yes"] {
+  color: #a32727;
+}
+
+.risk-box[data-level="no"] {
+  color: #27613d;
+}
+
+.hint {
+  font-size: 11px;
+  line-height: 1.5;
+  color: #687b87;
+  margin-top: 12px;
+}
+
+/* Ukrycie oryginalnych wyników WMS */
+[hidden] {
+  display: none !important;
+}
 </style>
 </head>
 <body>
@@ -43,34 +74,37 @@
   Powódź Q0,2% (500-letnia) — Wody Polskie
 </label>
 
- <div class="risk-title">Podtopienia - ocena WMS</div>
- <div id="floodingResult" class="risk-box" data-level="unknown" role="status" aria-live="polite">Kliknij punkt na mapie lub wyszukaj adres.</div>
-  
-<div class="risk-title">Powódź Q10% — ocena WMS</div>
-<div id="powodz10Result"
-     class="risk-box"
-     data-level="unknown"
-     role="status"
-     aria-live="polite">
-  Kliknij punkt na mapie lub wyszukaj adres.
-</div>
-  <div class="risk-title">Powódź Q1% — ocena WMS</div>
-<div id="powodz100Result"
-     class="risk-box"
-     data-level="unknown"
-     role="status"
-     aria-live="polite">
-  Kliknij punkt na mapie lub wyszukaj adres.
+
+<div class="risk-heading">
+  Ocena lokalizacji pod względem ryzyk fizycznych
 </div>
 
+<div class="risk-title">Podtopienia — ocena WMS</div>
+<div id="pigShort" class="risk-box"
+     data-level="unknown">NIE SPRAWDZONO</div>
+<div id="floodingResult" hidden></div>
+
+<div class="risk-title">Powódź Q10% — ocena WMS</div>
+<div id="q10Short" class="risk-box"
+     data-level="unknown">NIE SPRAWDZONO</div>
+<div id="powodz10Result" hidden></div>
+
+<div class="risk-title">Powódź Q1% — ocena WMS</div>
+<div id="q1Short" class="risk-box"
+     data-level="unknown">NIE SPRAWDZONO</div>
+<div id="powodz100Result" hidden></div>
+
 <div class="risk-title">Powódź Q0,2% — ocena WMS</div>
-<div id="powodz500Result"
-     class="risk-box"
-     data-level="unknown"
-     role="status"
-     aria-live="polite">
-  Kliknij punkt na mapie lub wyszukaj adres.
-</div>
+<div id="q02Short" class="risk-box"
+     data-level="unknown">NIE SPRAWDZONO</div>
+<div id="powodz500Result" hidden></div>
+
+<p class="hint">
+  Wynik „Nie wykryto zagrożenia” oznacza brak
+  wykrytego obiektu w odpowiedzi WMS,
+  a nie potwierdzony brak zagrożenia.
+</p>
+
 </div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script src="app.js"></script>
@@ -78,5 +112,6 @@
 <script src="podtopienia_wms.js"></script>
   <script src="powodz10.js"></script>
   <script src="powodzie_extra.js"></script>
+  <script src="wyniki.js"></script>
 </body>
 </html>
