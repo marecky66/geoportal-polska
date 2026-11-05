@@ -51,6 +51,7 @@ L.control.scale({ imperial: false }).addTo(map);
 const statusEl = document.getElementById('message');
 const borderToggle = document.getElementById('borderToggle');
 const layerToggle = document.getElementById('layerToggle');
+layerToggle.checked = false;
 let borderLayer = null, qgisLayer = null, marker = null;
 const showStatus = (text) => { statusEl.textContent = text; };
 const safeText = (value) => String(value ?? '').slice(0, 250);
