@@ -78,6 +78,11 @@
   <input type="checkbox" id="windToggle">
   Silne wiatry — powiaty o podwyższonym zagrożeniu Klimada2.0
 </label>
+  
+<label class="check">
+  <input type="checkbox" id="fuaToggle">
+  FUA — funkcjonalne obszary miejskie GUS 2024
+</label>
 
 <div class="risk-heading">
   Ocena lokalizacji pod względem ryzyk fizycznych
@@ -113,6 +118,16 @@
      role="status"
      aria-live="polite">
   Kliknij punkt na mapie lub wyszukaj adres.
+</div>
+
+<div class="risk-heading">
+  Położenie w funkcjonalnym obszarze miejskim
+</div>
+
+<div id="fuaResult"
+     class="risk-box"
+     data-level="unknown">
+  NIE SPRAWDZONO
 </div>
 
 
