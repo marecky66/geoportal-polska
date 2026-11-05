@@ -60,42 +60,74 @@ async function loadGeoJSON(path) {
  if (!response.ok) throw new Error(`Nie udało się pobrać ${path} (HTTP ${response.status})`);
  return response.json();
 }
+
 async function initLayers() {
- try {
-  const borders = await loadGeoJSON('data/granica_polski.geojson');
-  borderLayer = L.geoJSON(borders, { interactive: false, style: { color:'#df3554', weight:2.5, opacity:.9, fillOpacity:0 }});
 
-  // Bufory 30 km domyślnie wyłączone
-  layerToggle.checked = false;
+  // Granica Polski
+  try {
+    const borders = await loadGeoJSON('data/granica_polski.geojson');
 
-  if (map.hasLayer(qgisLayer)) {
-    map.removeLayer(qgisLayer);
+    borderLayer = L.geoJSON(borders, {
+      interactive: false,
+      style: {
+        color: '#df3554',
+        weight: 2.5,
+        opacity: 0.9,
+        fillOpacity: 0
+      }
+    });
+
+    if (borderToggle.checked) {
+      borderLayer.addTo(map);
+    }
+
+  } catch (e) {
+    borderToggle.disabled = true;
+    showStatus('Błąd wczytania granicy Polski.');
+    console.error(e);
   }
-catch(e) { borderToggle.disabled=true; showStatus('Błąd wczytania granicy Polski.'); console.error(e); }
- try {
-  const data = await loadGeoJSON('moja_warstwa.geojson');
-  qgisLayer = L.geoJSON(data, {
-   style: { color: '#964B00', weight: 2, fillColor: '#d99555', fillOpacity: 0.35 },
-   pointToLayer: (_feature, latlng) => L.circleMarker(latlng, { radius:7,color:'#066d68', fillColor:'#18a999',fillOpacity:.8 }),
 
-onEachFeature(feature, layer) {
-  layer.bindPopup(
-    '<strong>Odległość 30 km od granic miast powyżej 300tys mieszk.</strong>'
-  );
+  // Bufory 30 km
+  try {
+    const data = await loadGeoJSON('moja_warstwa.geojson');
+
+    qgisLayer = L.geoJSON(data, {
+      style: {
+        color: '#964B00',
+        weight: 2,
+        fillColor: '#d99555',
+        fillOpacity: 0.35
+      },
+
+      pointToLayer: (_feature, latlng) =>
+        L.circleMarker(latlng, {
+          radius: 7,
+          color: '#066d68',
+          fillColor: '#18a999',
+          fillOpacity: 0.8
+        }),
+
+      onEachFeature(feature, layer) {
+        layer.bindPopup(
+          '<strong>Odległość 30 km od granic miast powyżej 300 tys. mieszk.</strong>'
+        );
+      }
+    });
+
+    // Bufory domyślnie wyłączone
+    layerToggle.checked = false;
+
+    if (map.hasLayer(qgisLayer)) {
+      map.removeLayer(qgisLayer);
+    }
+
+  } catch (e) {
+    layerToggle.disabled = true;
+    showStatus('Błąd wczytywania buforów: ' + e.message);
+    console.error(e);
+  }
 }
 
-  });
-
-if (layerToggle.checked) {
-  qgisLayer.addTo(map);
-}
-
-} catch(e) {
-  layerToggle.disabled = true;
-  showStatus('Błąd: ' + e.message);
-  console.error(e);
-}
-}  
 borderToggle.addEventListener('change', () => { if(borderLayer) borderToggle.checked? borderLayer.addTo(map):map.removeLayer(borderLayer); });
 layerToggle.addEventListener('change', () => { if(qgisLayer) layerToggle.checked? qgisLayer.addTo(map):map.removeLayer(qgisLayer); });
 document.getElementById('resetBtn').addEventListener('click', () => {
