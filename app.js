@@ -35,9 +35,12 @@ function changeBasemap(name) {
     }
   });
 
-  if (basemaps[name]) {
-    basemaps[name].addTo(map);
-  }
+
+if (basemaps[name]) {
+  basemaps[name].addTo(map);
+  basemaps[name].bringToBack();
+}
+
 }
 document.getElementById('basemapSelect')
   .addEventListener('change', function () {
