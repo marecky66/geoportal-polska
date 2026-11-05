@@ -78,12 +78,11 @@ onEachFeature(feature, layer) {
 }
 
   });
- qgisLayer.addTo(map);
-layerToggle.checked = true;
 
-map.fitBounds(qgisLayer.getBounds(), {
-  padding: [20, 20]
-});
+if (layerToggle.checked) {
+  qgisLayer.addTo(map);
+}
+
 } catch(e) {
   layerToggle.disabled = true;
   showStatus('Błąd: ' + e.message);
