@@ -1,8 +1,21 @@
 'use strict';
 // Publiczne serwery OSM i Nominatim służą wyłącznie do małego projektu demonstracyjnego.
-const map = L.map('map', { zoomControl: true, maxZoom: 19 });
+
+const map = L.map('map', {
+  zoomControl: true,
+  maxZoom: 19
+});
+
 const POLAND_VIEW = [[49.0, 14.0], [54.9, 24.3]];
-map.fitBounds(POLAND_VIEW, { padding: [15, 15] });
+
+// Początkowy widok całej Polski
+map.fitBounds(POLAND_VIEW, {
+  padding: [15, 15]
+});
+
+// Blokada oddalania poniżej początkowego poziomu
+map.setMinZoom(map.getZoom());
+
 
 /* Podkłady mapowe */
 
