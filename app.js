@@ -39,6 +39,10 @@ function changeBasemap(name) {
     basemaps[name].addTo(map);
   }
 }
+document.getElementById('basemapSelect')
+  .addEventListener('change', function () {
+    changeBasemap(this.value);
+  });
 
 L.control.scale({ imperial: false }).addTo(map);
 const statusEl = document.getElementById('message');
