@@ -73,7 +73,11 @@
   <input type="checkbox" id="powodz500Toggle">
   Powódź Q0,2% (500-letnia) — Wody Polskie
 </label>
-
+  
+<label class="check">
+  <input type="checkbox" id="windToggle">
+  Silne wiatry — powiaty o podwyższonym zagrożeniu Klimada2.0
+</label>
 
 <div class="risk-heading">
   Ocena lokalizacji pod względem ryzyk fizycznych
@@ -98,6 +102,19 @@
 <div id="q02Short" class="risk-box"
      data-level="unknown">NIE SPRAWDZONO</div>
 <div id="powodz500Result" hidden></div>
+
+  <div class="risk-title">
+  Silne wiatry — ocena na poziomie powiatu
+</div>
+
+<div id="windResult"
+     class="risk-box"
+     data-level="unknown"
+     role="status"
+     aria-live="polite">
+  Kliknij punkt na mapie lub wyszukaj adres.
+</div>
+
 
 <p class="hint">
   Wynik „Nie wykryto zagrożenia” oznacza brak
