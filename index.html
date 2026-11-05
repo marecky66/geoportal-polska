@@ -12,6 +12,19 @@
   .risk-box[data-level="yes"] {border-color:#de9a92;background:#fff1ef;color:#a32727}
   .risk-box[data-level="no"] {border-color:#9abca6;background:#effaf2;color:#27613d}
   .risk-box[data-level="unknown"] {border-color:#d3dee5;background:#f7fafc}
+  
+.risk-box[data-level="ok"] {
+  border-color: #9abca6;
+  background: #effaf2;
+  color: #27613d;
+}
+
+.risk-box[data-level="bad"] {
+  border-color: #de9a92;
+  background: #fff1ef;
+  color: #a32727;
+}
+
   .module-tabs {display:flex;gap:5px;margin:14px 0 10px}
   .module-tabs button {flex:1;min-width:0;padding:9px 6px;border-radius:8px;border:1px solid #c6d6df;background:#eef3f6;color:#1a3e55;font-weight:700;font-size:13px;cursor:pointer}
   .module-tabs button.active {background:#26738c;color:white;border-color:#26738c}
@@ -46,13 +59,13 @@
     <label class="check"><input type="checkbox" id="layerToggle"> Odległość 30 km od granic miast powyżej 300 tys. mieszk.</label>
     <label class="check"><input type="checkbox" id="citiesToggle"> Miasta wojewódzkie (obecna warstwa)</label>
     <label class="check"><input type="checkbox" id="fuaToggle"> FUA — funkcjonalne obszary miejskie GUS 2024</label>
-    <div class="risk-heading">Ocena lokalizacji pod względem administracyjnym</div>
-    <div class="risk-title">Miasto wojewódzkie — weryfikacja w dostępnej warstwie</div>
-    <div id="cityResult" class="risk-box" data-level="unknown">NIE SPRAWDZONO</div>
-    <div class="risk-title">Odległość do 30 km od granic wybranych miast</div>
-    <div id="bufferResult" class="risk-box" data-level="unknown">NIE SPRAWDZONO</div>
-    <div class="risk-title">Funkcjonalny obszar miejski (FUA)</div>
-    <div id="fuaResult" class="risk-box" data-level="unknown">NIE SPRAWDZONO</div>
+  <div class="risk-heading">Ocena lokalizacji pod względem administracyjnym</div>
+<div class="risk-title">Miasto wojewódzkie</div>
+<div id="cityResult" class="risk-box" data-level="unknown">NIE SPRAWDZONO</div>
+<div class="risk-title">Odległość do 30 km od granic wybranych miast</div>
+<div id="bufferResult" class="risk-box" data-level="unknown">NIE SPRAWDZONO</div>
+<div class="risk-title">Funkcjonalny obszar miejski (FUA)</div>
+<div id="fuaResult" class="risk-box" data-level="unknown">NIE SPRAWDZONO</div>
     <p class="module-note">Uwaga: obecny plik miasta_300tys.geojson może nie obejmować wszystkich miast wojewódzkich. Wynik spoza tej warstwy nie jest pełnym rozstrzygnięciem.</p>
   </div>
 
