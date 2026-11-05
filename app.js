@@ -64,8 +64,14 @@ async function initLayers() {
  try {
   const borders = await loadGeoJSON('data/granica_polski.geojson');
   borderLayer = L.geoJSON(borders, { interactive: false, style: { color:'#df3554', weight:2.5, opacity:.9, fillOpacity:0 }});
-  if (borderToggle.checked) borderLayer.addTo(map);
- } catch(e) { borderToggle.disabled=true; showStatus('Błąd wczytania granicy Polski.'); console.error(e); }
+
+  // Bufory 30 km domyślnie wyłączone
+  layerToggle.checked = false;
+
+  if (map.hasLayer(qgisLayer)) {
+    map.removeLayer(qgisLayer);
+  }
+catch(e) { borderToggle.disabled=true; showStatus('Błąd wczytania granicy Polski.'); console.error(e); }
  try {
   const data = await loadGeoJSON('moja_warstwa.geojson');
   qgisLayer = L.geoJSON(data, {
