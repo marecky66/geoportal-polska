@@ -1,20 +1,38 @@
 'use strict';
 // Publiczne serwery OSM i Nominatim służą wyłącznie do małego projektu demonstracyjnego.
 
+
+const POLAND_VIEW = L.latLngBounds(
+  [49.0, 14.0],
+  [54.9, 24.3]
+);
+
+// Obszar, po którym można przesuwać mapę
+// Polska i niewielkie otoczenie
+const MAP_LIMITS = L.latLngBounds(
+  [47.5, 12.0],
+  [56.0, 26.5]
+);
+
 const map = L.map('map', {
   zoomControl: true,
-  maxZoom: 19
+  maxZoom: 19,
+  maxBounds: MAP_LIMITS,
+  maxBoundsViscosity: 1.0,
+  zoomSnap: 0.1
 });
 
-const POLAND_VIEW = [[49.0, 14.0], [54.9, 24.3]];
-
-// Początkowy widok całej Polski
+// Początkowy widok Polski
 map.fitBounds(POLAND_VIEW, {
   padding: [15, 15]
 });
 
-// Blokada oddalania poniżej początkowego poziomu
-map.setMinZoom(map.getZoom());
+// Największe dopuszczalne oddalenie
+const START_ZOOM = map.getZoom();
+map.setMinZoom(START_ZOOM);
+
+console.log('Minimalny zoom:', map.getMinZoom());
+
 
 
 /* Podkłady mapowe */
