@@ -105,19 +105,19 @@
         turf.booleanPointInPolygon(point, feature)
       );
 
-      if (match) {
-        const props = match.properties || {};
+   
+if (match) {
+  const props = match.properties || {};
+  const name = props.nazwa_fua || 'FUA';
 
-        const name = props.nazwa_fua || 'FUA';
-        const gmina = props.nazwa_gminy || '';
+  // Lokalizacja znajduje się w FUA — zielony
+  update('TAK — ' + name, 'ok');
 
-        update(
-          name + (gmina ? ' — gmina: ' + gmina : ''),
-          'no'
-        );
-      } else {
-        update('POZA OBSZARAMI FUA ZAWARTYMI W WARSTWIE');
-      }
+} else {
+  // Lokalizacja poza FUA — czerwony
+  update('NIE', 'bad');
+}
+
     } catch (error) {
       console.error('Błąd analizy FUA:', error);
       update('BRAK MOŻLIWOŚCI OCENY FUA');
