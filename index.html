@@ -27,6 +27,14 @@
   <form id="searchForm"><label for="address">Wyszukaj adres w Polsce</label><div class="search"><input id="address" type="search" placeholder="np. Marszałkowska 1, Warszawa" required minlength="3"><button type="submit" id="searchBtn">Szukaj</button></div></form>
   <div id="message" role="status" aria-live="polite"></div>
   <button type="button" id="resetBtn" class="secondary">↩ Cała Polska</button>
+  
+<div class="risk-title">Podkład mapowy</div>
+
+<select id="basemapSelect">
+  <option value="osm">OpenStreetMap</option>
+  <option value="satelita">Mapa satelitarna Esri</option>
+</select>
+
   <label class="check"><input type="checkbox" id="borderToggle" checked> Granica Polski</label>
 
   <div class="module-tabs" role="tablist" aria-label="Rodzaj analizy">
