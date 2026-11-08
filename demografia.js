@@ -144,7 +144,6 @@
   });
   
 // Wybór roku prognozy za pomocą przycisków
-const yearSelect = document.getElementById('demYear');
 const yearButtons = document.querySelectorAll(
   '#demYearButtons button[data-year]'
 );
