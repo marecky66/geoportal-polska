@@ -100,7 +100,7 @@ gugikHD: L.tileLayer(
     attribution: 'Ortofotomapa HD © GUGiK'
   }
 ),
-
+};
 
 
 // Domyślny podkład
