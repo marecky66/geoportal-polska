@@ -33,6 +33,37 @@
   .dem-stat span {display:block;font-size:11px;color:#617887}
   .dem-stat strong {display:block;margin-top:5px;font-size:20px;color:#15384d;font-variant-numeric:tabular-nums}
   .dem-clear {margin-top:12px;width:100%;white-space:normal}
+  
+/* Przyciski wyboru roku prognozy — Demografia */
+.dem-year-buttons {
+  display: flex;
+  gap: 6px;
+  margin: 8px 0 14px;
+}
+
+.dem-year-buttons button {
+  flex: 1;
+  min-width: 0;
+  padding: 10px 4px;
+  border: 1px solid #c6d6df;
+  border-radius: 8px;
+  background: #eef3f6;
+  color: #1a3e55;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.dem-year-buttons button.active {
+  background: #26738c;
+  border-color: #26738c;
+  color: white;
+}
+
+.dem-year-buttons button:hover:not(.active) {
+  background: #dbeaf0;
+}
+
 </style>
 </head>
 <body>
