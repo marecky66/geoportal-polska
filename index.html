@@ -103,12 +103,22 @@
       <div class="risk-title">Gmina</div>
       <div id="demGmina" class="risk-box" data-level="unknown">—</div>
       <div class="risk-title">Rok prognozy</div>
-      <select id="demYear" aria-label="Rok prognozy">
-        <option value="2030">2030</option>
-        <option value="2040" selected>2040</option>
-        <option value="2050">2050</option>
-        <option value="2060">2060</option>
-      </select>
+
+<div class="dem-year-buttons" id="demYearButtons">
+  <button type="button" data-year="2030">2030</button>
+  <button type="button" data-year="2040" class="active">2040</button>
+  <button type="button" data-year="2050">2050</button>
+  <button type="button" data-year="2060">2060</button>
+</div>
+
+<!-- Zachowujemy dotychczasowy wybór dla demografia.js -->
+<select id="demYear" hidden>
+  <option value="2030">2030</option>
+  <option value="2040" selected>2040</option>
+  <option value="2050">2050</option>
+  <option value="2060">2060</option>
+</select>
+
       <div class="dem-stats">
         <div class="dem-stat"><span>Ludność 2025</span><strong id="demBase">—</strong></div>
         <div class="dem-stat"><span>Ludność <span id="demForecastYear">2040</span></span><strong id="demForecast">—</strong></div>
