@@ -119,12 +119,20 @@
       records = payload.data;
     });
 
-  // Zdarzenie generuje zarówno wyszukiwanie adresu, jak i wyszukiwanie działki.
 
-  // Analiza demograficzna po kliknięciu na mapie
+  // Analiza po wyszukaniu adresu lub działki
+  document.addEventListener('drk:location-selected', event => {
+    evaluate(
+      Number(event.detail?.lat),
+      Number(event.detail?.lon)
+    );
+  });
+
+  // Analiza po kliknięciu na mapie
   map.on('click', event => {
     evaluate(event.latlng.lat, event.latlng.lng);
   });
+
 
   yearSelect.addEventListener('change', draw);
   clearBtn.addEventListener('click', () => {
