@@ -37,11 +37,13 @@
   // Zmiana modułu po lewej synchronizuje grupę warstw po prawej.
   function syncModule() {
     const esgActive = document.getElementById('tabEsg')?.getAttribute('aria-selected') === 'true';
-    adminLayers.hidden = esgActive;
+    const adminActive = document.getElementById('tabAdmin')?.getAttribute('aria-selected') === 'true';
+    adminLayers.hidden = !adminActive;
     esgLayers.hidden = !esgActive;
   }
   document.getElementById('tabAdmin')?.addEventListener('click', syncModule);
   document.getElementById('tabEsg')?.addEventListener('click', syncModule);
+  document.getElementById('tabDem')?.addEventListener('click', syncModule);
   syncModule();
 
   // Sterowanie przybliżeniem mapy.
