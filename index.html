@@ -1,10 +1,12 @@
 <!doctype html>
 <html lang="pl">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Geoportal DRK</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
 <link rel="stylesheet" href="./style.css">
+<link rel="stylesheet" href="./panel-map.css?v=1">
 <style>
   .risk-heading {font-size:16px;font-weight:700;color:#15384d;margin:17px 0 11px;line-height:1.3}
   .risk-title {font-weight:700;color:#15384d;font-size:13px;margin:13px 0 6px}
@@ -12,19 +14,8 @@
   .risk-box[data-level="yes"] {border-color:#de9a92;background:#fff1ef;color:#a32727}
   .risk-box[data-level="no"] {border-color:#9abca6;background:#effaf2;color:#27613d}
   .risk-box[data-level="unknown"] {border-color:#d3dee5;background:#f7fafc}
-  
-.risk-box[data-level="ok"] {
-  border-color: #9abca6;
-  background: #effaf2;
-  color: #27613d;
-}
-
-.risk-box[data-level="bad"] {
-  border-color: #de9a92;
-  background: #fff1ef;
-  color: #a32727;
-}
-
+  .risk-box[data-level="ok"] {border-color:#9abca6;background:#effaf2;color:#27613d}
+  .risk-box[data-level="bad"] {border-color:#de9a92;background:#fff1ef;color:#a32727}
   .module-tabs {display:flex;gap:5px;margin:14px 0 10px}
   .module-tabs button {flex:1;min-width:0;padding:9px 6px;border-radius:8px;border:1px solid #c6d6df;background:#eef3f6;color:#1a3e55;font-weight:700;font-size:13px;cursor:pointer}
   .module-tabs button.active {background:#26738c;color:white;border-color:#26738c}
@@ -35,49 +26,30 @@
 </head>
 <body>
 <div id="map" aria-label="Mapa Polski"></div>
+
+<!-- LEWA STRONA: wyszukiwanie i WYNIKI analiz -->
 <div class="panel">
   <h1>Geoportal DRK</h1>
-  <form id="searchForm"><label for="address">Wyszukaj adres w Polsce</label><div class="search"><input id="address" type="search" placeholder="np. Marszałkowska 1, Warszawa" required minlength="3"><button type="submit" id="searchBtn">Szukaj</button></div></form>
+  <form id="searchForm">
+    <label for="address">Wyszukaj adres w Polsce</label>
+    <div class="search">
+      <input id="address" type="search" placeholder="np. Marszałkowska 1, Warszawa" required minlength="3">
+      <button type="submit" id="searchBtn">Szukaj</button>
+    </div>
+  </form>
   <div id="message" role="status" aria-live="polite"></div>
-  
-<div class="risk-title">Wyszukaj działkę ewidencyjną</div>
 
-<form id="parcelSearchForm">
-  <label for="parcelId">Identyfikator działki</label>
-
-  <div class="search">
-    <input
-      type="text"
-      id="parcelId"
-      placeholder="np. 141201_1.0001.6509"
-      autocomplete="off"
-      required
-    >
-
-    <button type="submit" id="parcelSearchBtn">
-      Szukaj
-    </button>
-  </div>
-</form>
-
-<div id="parcelMessage"
-     role="status"
-     aria-live="polite">
-</div>
+  <div class="risk-title">Wyszukaj działkę ewidencyjną</div>
+  <form id="parcelSearchForm">
+    <label for="parcelId">Identyfikator działki</label>
+    <div class="search">
+      <input type="text" id="parcelId" placeholder="np. 141201_1.0001.6509" autocomplete="off" required>
+      <button type="submit" id="parcelSearchBtn">Szukaj</button>
+    </div>
+  </form>
+  <div id="parcelMessage" role="status" aria-live="polite"></div>
 
   <button type="button" id="resetBtn" class="secondary">↩ Cała Polska</button>
-  
-<div class="risk-title">Podkład mapowy</div>
-
-
-<select id="basemapSelect">
-  <option value="osm">OpenStreetMap</option>
-  <option value="satelita">Esri — mapa satelitarna</option>
-  <option value="gugik">GUGiK — ortofotomapa</option>
-</select>
-
-
-  <label class="check"><input type="checkbox" id="borderToggle" checked> Granica Polski</label>
 
   <div class="module-tabs" role="tablist" aria-label="Rodzaj analizy">
     <button type="button" id="tabAdmin" class="active" role="tab" aria-controls="moduleAdmin" aria-selected="true">Administracyjny</button>
@@ -85,25 +57,17 @@
   </div>
 
   <div id="moduleAdmin" class="module-section" role="tabpanel" aria-labelledby="tabAdmin">
-    <label class="check"><input type="checkbox" id="layerToggle"> Odległość 30 km od granic miast powyżej 300 tys. mieszk.</label>
-    <label class="check"><input type="checkbox" id="citiesToggle"> Miasta wojewódzkie (obecna warstwa)</label>
-    <label class="check"><input type="checkbox" id="fuaToggle"> FUA — funkcjonalne obszary miejskie GUS 2024</label>
-  <div class="risk-heading">Ocena lokalizacji pod względem administracyjnym</div>
-<div class="risk-title">Miasto wojewódzkie</div>
-<div id="cityResult" class="risk-box" data-level="unknown">NIE SPRAWDZONO</div>
-<div class="risk-title">Odległość do 30 km od granic wybranych miast</div>
-<div id="bufferResult" class="risk-box" data-level="unknown">NIE SPRAWDZONO</div>
-<div class="risk-title">Funkcjonalny obszar miejski (FUA)</div>
-<div id="fuaResult" class="risk-box" data-level="unknown">NIE SPRAWDZONO</div>
+    <div class="risk-heading">Ocena lokalizacji pod względem administracyjnym</div>
+    <div class="risk-title">Miasto wojewódzkie</div>
+    <div id="cityResult" class="risk-box" data-level="unknown">NIE SPRAWDZONO</div>
+    <div class="risk-title">Odległość do 30 km od granic wybranych miast</div>
+    <div id="bufferResult" class="risk-box" data-level="unknown">NIE SPRAWDZONO</div>
+    <div class="risk-title">Funkcjonalny obszar miejski (FUA)</div>
+    <div id="fuaResult" class="risk-box" data-level="unknown">NIE SPRAWDZONO</div>
     <p class="module-note">Uwaga: obecny plik miasta_300tys.geojson może nie obejmować wszystkich miast wojewódzkich. Wynik spoza tej warstwy nie jest pełnym rozstrzygnięciem.</p>
   </div>
 
   <div id="moduleEsg" class="module-section" role="tabpanel" aria-labelledby="tabEsg" hidden>
-    <label class="check"><input type="checkbox" id="floodingToggle"> Podtopienia — PIG</label>
-    <label class="check"><input type="checkbox" id="powodz10Toggle"> Powódź Q10% (10-letnia) — Wody Polskie</label>
-    <label class="check"><input type="checkbox" id="powodz100Toggle"> Powódź Q1% (100-letnia) — Wody Polskie</label>
-    <label class="check"><input type="checkbox" id="powodz500Toggle"> Powódź Q0,2% (500-letnia) — Wody Polskie</label>
-    <label class="check"><input type="checkbox" id="windToggle"> Silne wiatry — powiaty o podwyższonym zagrożeniu Klimada 2.0</label>
     <div class="risk-heading">Ocena lokalizacji pod względem ryzyk fizycznych</div>
     <div class="risk-title">Podtopienia — ocena WMS</div>
     <div id="pigShort" class="risk-box" data-level="unknown">NIE SPRAWDZONO</div>
@@ -122,8 +86,52 @@
     <p class="module-note">„NIE WYKRYTO” w GetFeatureInfo nie jest potwierdzeniem braku zagrożenia. Wyniki mają charakter poglądowy.</p>
   </div>
 </div>
+
+<!-- PRAWA STRONA: wszystkie przełączniki warstw i podkładów -->
+<aside id="mapTools" class="map-tools" aria-label="Sterowanie mapą">
+  <div class="map-tools-header">
+    <strong>☷ Warstwy mapy</strong>
+    <button type="button" id="mapToolsToggle" aria-expanded="true" aria-controls="mapToolsContent">Zwiń</button>
+  </div>
+  <div id="mapToolsContent" class="map-tools-content">
+    <div class="map-tools-title">Podkład mapowy</div>
+    <label for="basemapSelect" class="map-tools-visually-hidden">Wybierz podkład</label>
+    <select id="basemapSelect">
+      <option value="osm">OpenStreetMap</option>
+      <option value="satelita">Esri — mapa satelitarna</option>
+      <option value="gugik">GUGiK — ortofotomapa</option>
+    </select>
+
+    <div class="map-tools-title">Warstwy tematyczne</div>
+    <label class="map-tools-check"><input type="checkbox" id="borderToggle" checked> Granica Polski</label>
+
+    <div id="rightLayersAdmin" class="map-tools-layergroup">
+      <div class="map-tools-group-title">Administracyjne</div>
+      <label class="map-tools-check"><input type="checkbox" id="layerToggle"> Bufory 30 km od dużych miast</label>
+      <label class="map-tools-check"><input type="checkbox" id="citiesToggle"> Miasta wojewódzkie (obecna warstwa)</label>
+      <label class="map-tools-check"><input type="checkbox" id="fuaToggle"> FUA — obszary miejskie GUS 2024</label>
+    </div>
+
+    <div id="rightLayersEsg" class="map-tools-layergroup" hidden>
+      <div class="map-tools-group-title">ESG — ryzyka fizyczne</div>
+      <label class="map-tools-check"><input type="checkbox" id="floodingToggle"> Podtopienia — PIG</label>
+      <label class="map-tools-check"><input type="checkbox" id="powodz10Toggle"> Powódź Q10% — Wody Polskie</label>
+      <label class="map-tools-check"><input type="checkbox" id="powodz100Toggle"> Powódź Q1% — Wody Polskie</label>
+      <label class="map-tools-check"><input type="checkbox" id="powodz500Toggle"> Powódź Q0,2% — Wody Polskie</label>
+      <label class="map-tools-check"><input type="checkbox" id="windToggle"> Silne wiatry — Klimada 2.0</label>
+    </div>
+
+    <div class="map-tools-title">Przybliżenie mapy</div>
+    <div class="map-tools-zoom">
+      <button type="button" id="mapZoomIn" aria-label="Przybliż mapę">＋</button>
+      <button type="button" id="mapZoomOut" aria-label="Oddal mapę">−</button>
+      <span id="mapZoomValue" aria-label="Poziom przybliżenia">Zoom: —</span>
+    </div>
+  </div>
+</aside>
+
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-<script src="app.js?v=11"></script>
+<script src="app.js?v=12"></script>
 <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6.5.0/turf.min.js"></script>
 <script src="podtopienia_wms.js"></script>
 <script src="powodz10.js"></script>
@@ -134,5 +142,6 @@
 <script src="administracja.js?v=2"></script>
 <script src="moduly.js"></script>
 <script src="dzialki.js?v=2"></script>
+<script src="panel-map.js?v=1"></script>
 </body>
 </html>
