@@ -57,16 +57,27 @@ const basemaps = {
   ),
 
   // GUGiK — standardowa ortofotomapa
-  gugik: L.tileLayer.wms(
-    'https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/StandardResolution',
-    {
-      layers: 'Raster',
-      format: 'image/jpeg',
-      transparent: false,
-      version: '1.1.1',
-      attribution: 'Ortofotomapa &copy; GUGiK'
-    }
-  ),
+
+gugik: L.tileLayer(
+  'https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMTS/StandardResolution' +
+  '?SERVICE=WMTS' +
+  '&REQUEST=GetTile' +
+  '&VERSION=1.0.0' +
+  '&LAYER=ORTOFOTOMAPA' +
+  '&STYLE=default' +
+  '&TILEMATRIXSET=EPSG:3857' +
+  '&TILEMATRIX={z}' +
+  '&TILEROW={y}' +
+  '&TILECOL={x}' +
+  '&FORMAT=image/jpeg',
+  {
+    maxZoom: 19,
+    maxNativeZoom: 18,
+    tileSize: 256,
+    attribution: 'Ortofotomapa © GUGiK'
+  }
+),
+
 
   // GUGiK — wysoka rozdzielczość
   gugikHD: L.tileLayer.wms(
