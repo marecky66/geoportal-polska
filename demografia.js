@@ -142,4 +142,31 @@
     details.hidden = true;
     setMessage('Wyszukaj adres lub działkę, aby wyświetlić prognozę dla gminy.');
   });
+  
+// Wybór roku prognozy za pomocą przycisków
+const yearSelect = document.getElementById('demYear');
+const yearButtons = document.querySelectorAll(
+  '#demYearButtons button[data-year]'
+);
+
+yearButtons.forEach(button => {
+  button.addEventListener('click', () => {
+    const year = button.dataset.year;
+
+    // Aktualizacja dotychczasowego wyboru roku
+    yearSelect.value = year;
+    yearSelect.dispatchEvent(
+      new Event('change', { bubbles: true })
+    );
+
+    // Zaznaczenie aktywnego przycisku
+    yearButtons.forEach(btn => {
+      btn.classList.toggle(
+        'active',
+        btn.dataset.year === year
+      );
+    });
+  });
+});
+
 })();
