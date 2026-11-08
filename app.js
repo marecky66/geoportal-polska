@@ -77,29 +77,6 @@ gugik: L.tileLayer(
     attribution: 'Ortofotomapa © GUGiK'
   }
 ),
-
-
-  // GUGiK — wysoka rozdzielczość
-
-gugikHD: L.tileLayer(
-  'https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMTS/HighResolution' +
-  '?SERVICE=WMTS' +
-  '&REQUEST=GetTile' +
-  '&VERSION=1.0.0' +
-  '&LAYER=ORTOFOTOMAPA' +
-  '&STYLE=default' +
-  '&TILEMATRIXSET=EPSG:3857' +
-  '&TILEMATRIX={z}' +
-  '&TILEROW={y}' +
-  '&TILECOL={x}' +
-  '&FORMAT=image/jpeg',
-  {
-    maxZoom: 19,
-    maxNativeZoom: 18,
-    tileSize: 256,
-    attribution: 'Ortofotomapa HD © GUGiK'
-  }
-),
 };
 
 
