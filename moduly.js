@@ -4,15 +4,18 @@
 (() => {
   const tabs = {
     admin: document.getElementById('tabAdmin'),
-    esg: document.getElementById('tabEsg')
+    esg: document.getElementById('tabEsg'),
+    dem: document.getElementById('tabDem')
   };
   const panels = {
     admin: document.getElementById('moduleAdmin'),
-    esg: document.getElementById('moduleEsg')
+    esg: document.getElementById('moduleEsg'),
+    dem: document.getElementById('moduleDem')
   };
   const layerIds = {
     admin: ['layerToggle', 'citiesToggle', 'fuaToggle'],
-    esg: ['floodingToggle', 'powodz10Toggle', 'powodz100Toggle', 'powodz500Toggle', 'windToggle']
+    esg: ['floodingToggle', 'powodz10Toggle', 'powodz100Toggle', 'powodz500Toggle', 'windToggle'],
+    dem: []
   };
   if (Object.values(tabs).some(v => !v) || Object.values(panels).some(v => !v)) {
     console.error('moduly.js: brak kart lub paneli w index.html.');
@@ -46,6 +49,7 @@
   }
   tabs.admin.addEventListener('click', () => switchTo('admin'));
   tabs.esg.addEventListener('click', () => switchTo('esg'));
+  tabs.dem.addEventListener('click', () => switchTo('dem'));
   panels.admin.hidden = false;
   panels.esg.hidden = true;
 })();
