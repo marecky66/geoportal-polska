@@ -22,6 +22,8 @@
   .module-section[hidden], [hidden] {display:none!important}
   .module-note {font-size:11px;line-height:1.4;color:#667d8d;margin:8px 0 10px}
   .panel {max-height:calc(100vh - 24px);overflow-y:auto}
+  /* Ukryj puste komunikaty, żeby nie tworzyły przerwy między wyszukiwarkami */
+  #message:empty, #parcelMessage:empty {display:none !important;}
 </style>
 </head>
 <body>
@@ -39,9 +41,8 @@
   </form>
   <div id="message" role="status" aria-live="polite"></div>
 
-  <div class="risk-title">Wyszukaj działkę ewidencyjną</div>
   <form id="parcelSearchForm">
-    <label for="parcelId">Identyfikator działki</label>
+    <label for="parcelId">Wyszukaj działkę w Polsce</label>
     <div class="search">
       <input type="text" id="parcelId" placeholder="np. 141201_1.0001.6509" autocomplete="off" required>
       <button type="submit" id="parcelSearchBtn">Szukaj</button>
