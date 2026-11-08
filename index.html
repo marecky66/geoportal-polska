@@ -24,6 +24,15 @@
   .panel {max-height:calc(100vh - 24px);overflow-y:auto}
   /* Ukryj puste komunikaty, żeby nie tworzyły przerwy między wyszukiwarkami */
   #message:empty, #parcelMessage:empty {display:none !important;}
+
+  /* Moduł demograficzny — trzy zakładki i czytelne dane */
+  .module-tabs button {font-size:11px;padding:9px 3px}
+  #demYear {width:100%;box-sizing:border-box;padding:8px;border:1px solid #c6d6df;border-radius:7px;background:#fff;color:#17364a}
+  .dem-stats {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:12px 0}
+  .dem-stat {border:1px solid #d3dee5;background:#f7fafc;border-radius:8px;padding:10px;min-width:0}
+  .dem-stat span {display:block;font-size:11px;color:#617887}
+  .dem-stat strong {display:block;margin-top:5px;font-size:20px;color:#15384d;font-variant-numeric:tabular-nums}
+  .dem-clear {margin-top:12px;width:100%;white-space:normal}
 </style>
 </head>
 <body>
@@ -55,6 +64,7 @@
   <div class="module-tabs" role="tablist" aria-label="Rodzaj analizy">
     <button type="button" id="tabAdmin" class="active" role="tab" aria-controls="moduleAdmin" aria-selected="true">Administracyjny</button>
     <button type="button" id="tabEsg" role="tab" aria-controls="moduleEsg" aria-selected="false">ESG</button>
+    <button type="button" id="tabDem" role="tab" aria-controls="moduleDem" aria-selected="false">Demografia</button>
   </div>
 
   <div id="moduleAdmin" class="module-section" role="tabpanel" aria-labelledby="tabAdmin">
@@ -65,6 +75,7 @@
     <div id="bufferResult" class="risk-box" data-level="unknown">NIE SPRAWDZONO</div>
     <div class="risk-title">Funkcjonalny obszar miejski (FUA)</div>
     <div id="fuaResult" class="risk-box" data-level="unknown">NIE SPRAWDZONO</div>
+    <p class="module-note">Uwaga: obecny plik miasta_300tys.geojson może nie obejmować wszystkich miast wojewódzkich. Wynik spoza tej warstwy nie jest pełnym rozstrzygnięciem.</p>
   </div>
 
   <div id="moduleEsg" class="module-section" role="tabpanel" aria-labelledby="tabEsg" hidden>
@@ -83,7 +94,32 @@
     <div id="powodz500Result" hidden></div>
     <div class="risk-title">Silne wiatry — ocena na poziomie powiatu</div>
     <div id="windResult" class="risk-box" data-level="unknown">NIE SPRAWDZONO</div>
+    <p class="module-note">„NIE WYKRYTO” w GetFeatureInfo nie jest potwierdzeniem braku zagrożenia. Wyniki mają charakter poglądowy.</p>
   </div>
+  <div id="moduleDem" class="module-section" role="tabpanel" aria-labelledby="tabDem" hidden>
+    <div class="risk-heading">Ocena lokalizacji pod względem demograficznym</div>
+    <div id="demStatus" class="risk-box" data-level="unknown">Wyszukaj adres lub działkę, aby wyświetlić prognozę dla gminy.</div>
+    <div id="demDetails" hidden>
+      <div class="risk-title">Gmina</div>
+      <div id="demGmina" class="risk-box" data-level="unknown">—</div>
+      <div class="risk-title">Rok prognozy</div>
+      <select id="demYear" aria-label="Rok prognozy">
+        <option value="2030">2030</option>
+        <option value="2040" selected>2040</option>
+        <option value="2050">2050</option>
+        <option value="2060">2060</option>
+      </select>
+      <div class="dem-stats">
+        <div class="dem-stat"><span>Ludność 2025</span><strong id="demBase">—</strong></div>
+        <div class="dem-stat"><span>Ludność <span id="demForecastYear">2040</span></span><strong id="demForecast">—</strong></div>
+      </div>
+      <div class="risk-title">Prognozowana zmiana liczby ludności (2025–<span id="demChangeYear">2040</span>)</div>
+      <div id="demChange" class="risk-box" data-level="unknown">—</div>
+    </div>
+    <button type="button" id="demClear" class="secondary dem-clear">Wyczyść analizę demograficzną</button>
+    <p class="module-note">Źródło: Główny Urząd Statystyczny (GUS), <a href="https://stat.gov.pl/obszary-tematyczne/ludnosc/prognoza-ludnosci/prognoza-ludnosci-na-lata-2023-2060,11,1.html" target="_blank" rel="noopener noreferrer">„Prognoza ludności na lata 2023–2060”</a>, plik „Gminy ludność. Tablica zbiorcza”, rozszerzenie prognozy gmin do 2060 r. Wartości dla 2025 r. również pochodzą z prognozy (nie są danymi rzeczywistymi). Identyfikacja gminy: GUGiK, ULDK / PRG. Wyniki mają charakter prognostyczny, nie stanowią gwarancji przyszłej liczby ludności.</p>
+  </div>
+
 </div>
 
 <!-- PRAWA STRONA: wszystkie przełączniki warstw i podkładów -->
@@ -139,8 +175,9 @@
 <script src="wiatry.js"></script>
 <script src="fua.js?v=2"></script>
 <script src="administracja.js?v=2"></script>
-<script src="moduly.js"></script>
+<script src="moduly.js?v=3"></script>
+<script src="demografia.js?v=1"></script>
 <script src="dzialki.js?v=2"></script>
-<script src="panel-map.js?v=1"></script>
+<script src="panel-map.js?v=2"></script>
 </body>
 </html>
