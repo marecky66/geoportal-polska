@@ -1,12 +1,14 @@
 'use strict';
-// Geoportal DRK — prognoza demograficzna gmin wg GUS, bez warstwy na mapie.
-// Identyfikacja gminy z punktu: GUGiK ULDK / PRG (GetCommuneByXY).
+// Geoportal DRK — prognoza demograficzna GUS, bez nowej warstwy mapy.
+// Gmina rozpoznawana przez GUGiK ULDK / PRG (GetCommuneByXY).
 (() => {
   const byId = id => document.getElementById(id);
   const status = byId('demStatus');
   const details = byId('demDetails');
   const yearSelect = byId('demYear');
   const clearBtn = byId('demClear');
+  const yearButtons = [...document.querySelectorAll('#demYearButtons button[data-year]')];
+
   if (!status || !details || !yearSelect || !clearBtn) {
     console.error('demografia.js: brak elementów modułu.');
     return;
@@ -14,7 +16,6 @@
 
   let records = null;
   let selectedRecord = null;
-  let lastLocation = null;
   let generation = 0;
   const cache = new Map();
   const formatNumber = n => Number(n).toLocaleString('pl-PL');
@@ -23,6 +24,17 @@
     status.textContent = message;
     status.dataset.level = level;
     status.hidden = false;
+  }
+
+  function setYear(year) {
+    if (!['2030', '2040', '2050', '2060'].includes(String(year))) return;
+    yearSelect.value = String(year);
+    yearButtons.forEach(button => {
+      const active = button.dataset.year === yearSelect.value;
+      button.classList.toggle('active', active);
+      button.setAttribute('aria-pressed', String(active));
+    });
+    draw();
   }
 
   function draw() {
@@ -51,7 +63,7 @@
     status.hidden = true;
   }
 
-  // Identyfikator gminy ULDK: 146501_1 -> 1465011 (TERYT w danych GUS).
+  // Kod ULDK np. 146501_1 odpowiada siedmiocyfrowemu TERYT 1465011.
   function extractCode(body) {
     const lines = body.replace(/^\uFEFF/, '').trim().split(/\r?\n/).map(s => s.trim()).filter(Boolean);
     if (!lines.length || lines[0] !== '0') {
@@ -79,23 +91,33 @@
     return code;
   }
 
+  const dataPromise = fetch('./prognoza_gus.json')
+    .then(response => {
+      if (!response.ok) throw new Error('HTTP ' + response.status + ' dla prognoza_gus.json');
+      return response.json();
+    })
+    .then(payload => {
+      if (!payload.data || typeof payload.data !== 'object') {
+        throw new Error('Nieprawidłowy JSON prognozy.');
+      }
+      records = payload.data;
+    });
+
+  // Zachowaj błąd dla evaluate(), ale uniknij nieobsłużonego odrzucenia Promise.
+  dataPromise.catch(error => console.error('Błąd ładowania prognozy GUS:', error));
+
   async function evaluate(lat, lon) {
     if (!Number.isFinite(lat) || !Number.isFinite(lon)) return;
-    lastLocation = {lat, lon};
     selectedRecord = null;
     details.hidden = true;
     const ticket = ++generation;
     setMessage('Sprawdzanie gminy i wczytywanie prognozy GUS…');
     try {
-      const [code] = await Promise.all([
-        locateCommune(lat, lon),
-        dataPromise
-      ]);
+      const [code] = await Promise.all([locateCommune(lat, lon), dataPromise]);
       if (ticket !== generation) return;
-      if (!records) throw new Error('Nie udało się wczytać danych GUS.');
-      const record = records[code];
+      const record = records?.[code];
       if (!record) {
-        setMessage('Brak prognozy dla gminy TERYT ' + code + ' w załączonej tabeli GUS.');
+        setMessage('Brak prognozy dla gminy TERYT ' + code + ' w tabeli GUS.');
         return;
       }
       selectedRecord = record;
@@ -109,71 +131,29 @@
     }
   }
 
-  const dataPromise = fetch('./prognoza_gus.json')
-    .then(response => {
-      if (!response.ok) throw new Error('HTTP ' + response.status + ' dla prognoza_gus.json');
-      return response.json();
-    })
-    .then(payload => {
-      if (!payload.data || typeof payload.data !== 'object') throw new Error('Nieprawidłowy JSON prognozy.');
-      records = payload.data;
-    });
-
-
-  // Analiza po wyszukaniu adresu lub działki
+  // Wyszukanie adresu lub działki.
   document.addEventListener('drk:location-selected', event => {
-    evaluate(
-      Number(event.detail?.lat),
-      Number(event.detail?.lon)
-    );
+    evaluate(Number(event.detail?.lat), Number(event.detail?.lon));
   });
 
-  // Analiza po kliknięciu na mapie
-  map.on('click', event => {
-    evaluate(event.latlng.lat, event.latlng.lng);
+  // Kliknięcie na mapie.
+  if (typeof map !== 'undefined' && map?.on) {
+    map.on('click', event => evaluate(event.latlng.lat, event.latlng.lng));
+  }
+
+  yearButtons.forEach(button => {
+    button.addEventListener('click', () => setYear(button.dataset.year));
   });
+  yearSelect.addEventListener('change', () => setYear(yearSelect.value));
 
-
-  yearSelect.addEventListener('change', draw);
-  clearBtn.addEventListener('click', () => {
+  function clearAnalysis() {
     ++generation;
     selectedRecord = null;
-    lastLocation = null;
     details.hidden = true;
-    yearSelect.value = '2040';
-    setMessage('Wyszukaj adres lub działkę, aby wyświetlić prognozę dla gminy.');
-  });
-  byId('resetBtn')?.addEventListener('click', () => {
-    ++generation;
-    selectedRecord = null;
-    lastLocation = null;
-    details.hidden = true;
-    setMessage('Wyszukaj adres lub działkę, aby wyświetlić prognozę dla gminy.');
-  });
-  
-// Wybór roku prognozy za pomocą przycisków
-const yearButtons = document.querySelectorAll(
-  '#demYearButtons button[data-year]'
-);
-
-yearButtons.forEach(button => {
-  button.addEventListener('click', () => {
-    const year = button.dataset.year;
-
-    // Aktualizacja dotychczasowego wyboru roku
-    yearSelect.value = year;
-    yearSelect.dispatchEvent(
-      new Event('change', { bubbles: true })
-    );
-
-    // Zaznaczenie aktywnego przycisku
-    yearButtons.forEach(btn => {
-      btn.classList.toggle(
-        'active',
-        btn.dataset.year === year
-      );
-    });
-  });
-});
-
+    setYear('2040');
+    setMessage('Wyszukaj adres, działkę lub kliknij mapę, aby wyświetlić prognozę dla gminy.');
+  }
+  clearBtn.addEventListener('click', clearAnalysis);
+  byId('resetBtn')?.addEventListener('click', clearAnalysis);
+  setYear(yearSelect.value);
 })();
