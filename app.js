@@ -37,7 +37,9 @@ console.log('Minimalny zoom:', map.getMinZoom());
 
 /* Podkłady mapowe */
 
+
 const basemaps = {
+
   osm: L.tileLayer(
     'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
     {
@@ -52,8 +54,33 @@ const basemaps = {
       maxZoom: 19,
       attribution: 'Tiles &copy; Esri and contributors'
     }
+  ),
+
+  // GUGiK — standardowa ortofotomapa
+  gugik: L.tileLayer.wms(
+    'https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/StandardResolution',
+    {
+      layers: 'Raster',
+      format: 'image/jpeg',
+      transparent: false,
+      version: '1.1.1',
+      attribution: 'Ortofotomapa &copy; GUGiK'
+    }
+  ),
+
+  // GUGiK — wysoka rozdzielczość
+  gugikHD: L.tileLayer.wms(
+    'https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/HighResolution',
+    {
+      layers: '3,2,1',
+      format: 'image/png',
+      transparent: false,
+      version: '1.1.1',
+      attribution: 'Ortofotomapa HD &copy; GUGiK'
+    }
   )
 };
+
 
 // Domyślny podkład
 basemaps.osm.addTo(map);
