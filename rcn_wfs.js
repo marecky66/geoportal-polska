@@ -1,70 +1,101 @@
 
 'use strict';
 
-// Geoportal DRK — WFS Rejestru Cen Nieruchomości GUGiK
-// Etap 1: sprawdzenie dostępnych warstw i formatów.
-
+// Geoportal DRK — pobieranie RCN WFS z lokalizacji
 (() => {
-  const WFS_URL =
-    'https://mapy.geoportal.gov.pl/wss/service/rcn';
+  const url = 'https://mapy.geoportal.gov.pl/wss/service/rcn';
 
-  async function checkWFS() {
+  proj4.defs(
+    'EPSG:2180',
+    '+proj=tmerc +lat_0=0 +lon_0=19 +k=0.9993 ' +
+    '+x_0=500000 +y_0=-5300000 +ellps=GRS80 ' +
+    '+units=m +no_defs'
+  );
+
+  let requestNumber = 0;
+
+  async function searchRCN(lat, lon) {
+    const ticket = ++requestNumber;
+    const [x, y] = proj4('EPSG:4326', 'EPSG:2180', [lon, lat]);
+    const r = 30;
+
+    const filter = `
+      <fes:Filter xmlns:fes="http://www.opengis.net/fes/2.0"
+                  xmlns:gml="http://www.opengis.net/gml/3.2">
+        <fes:BBOX>
+          <fes:ValueReference>geom</fes:ValueReference>
+          <gml:Envelope srsName="EPSG:2180">
+            <gml:lowerCorner>${y-r} ${x-r}</gml:lowerCorner>
+            <gml:upperCorner>${y+r} ${x+r}</gml:upperCorner>
+          </gml:Envelope>
+        </fes:BBOX>
+      </fes:Filter>`;
+
     const params = new URLSearchParams({
       SERVICE: 'WFS',
-      REQUEST: 'GetCapabilities'
+      VERSION: '2.0.0',
+      REQUEST: 'GetFeature',
+      TYPENAMES: 'ms:lokale',
+      COUNT: '100',
+      FILTER: filter
     });
 
     try {
-      const response = await fetch(
-        WFS_URL + '?' + params.toString()
-      );
+      const response = await fetch(url + '?' + params);
+      if (!response.ok) throw new Error('HTTP ' + response.status);
 
-      if (!response.ok) {
-        throw new Error('HTTP ' + response.status);
-      }
-
-      const xmlText = await response.text();
       const xml = new DOMParser().parseFromString(
-        xmlText,
+        await response.text(),
         'application/xml'
       );
 
       if (xml.querySelector('parsererror')) {
-        throw new Error('Nieprawidłowa odpowiedź XML.');
+        throw new Error('Nieprawidłowy XML');
       }
 
-      const root = xml.documentElement;
+      const members = [...xml.getElementsByTagName('*')]
+        .filter(el => el.localName === 'member');
 
-      if (!root.localName.includes('Capabilities')) {
-        throw new Error('Odpowiedź nie jest GetCapabilities WFS.');
-      }
+      const records = members.map(member => {
+        const obj = member.firstElementChild;
+        const get = name =>
+          [...obj.children].find(el => el.localName === name)
+            ?.textContent.trim() || '';
 
-      const layers = Array.from(
-        xml.getElementsByTagName('*')
-      )
-        .filter(el => el.localName === 'FeatureType')
-        .map(el => {
-          const name = Array.from(el.children)
-            .find(child => child.localName === 'Name');
+        return {
+          identyfikator: get('LOK_ID_LOKALU'),
+          adres: get('LOK_ADRES'),
+          funkcja: get('LOK_FUNKCJA'),
+          powierzchnia: get('LOK_POW_UZYT'),
+          cena: get('LOK_CENA_BRUTTO'),
+          dokument: get('DOK_OZNACZENIE'),
+          data: get('DOK_DATA')
+        };
+      });
 
-          return name?.textContent?.trim();
-        })
-        .filter(Boolean);
+      if (ticket !== requestNumber) return;
 
-      console.log('RCN WFS — dostępne warstwy:', layers);
+      console.log('RCN WFS — lokalizacja:', lat, lon);
+      console.log('Liczba pobranych rekordów:', records.length);
+      console.table(records);
 
-      window.drkRcnWfsInfo = {
-        url: WFS_URL,
-        layers
-      };
-
+      document.dispatchEvent(new CustomEvent('drk:rcn-wfs-results', {
+        detail: { lat, lon, records }
+      }));
     } catch (error) {
-      console.error(
-        'RCN WFS — problem z połączeniem:',
-        error
-      );
+      if (ticket === requestNumber) {
+        console.error('RCN WFS:', error);
+      }
     }
   }
 
-  checkWFS();
+  // Wyszukiwarka adresów i działek
+  document.addEventListener('drk:location-selected', e => {
+    searchRCN(Number(e.detail.lat), Number(e.detail.lon));
+  });
+
+  // Kliknięcie mapy
+  map.on('click', e => {
+    searchRCN(e.latlng.lat, e.latlng.lng);
+  });
 })();
