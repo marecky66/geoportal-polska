@@ -76,6 +76,32 @@
       if (ticket !== requestNumber) return;
 
       console.log('RCN WFS — lokalizacja:', lat, lon);
+      
+const mieszkania = records
+  .filter(r =>
+    r.funkcja?.trim().toLowerCase() === 'mieszkalna'
+  )
+  .map(r => {
+    const powierzchnia = Number(
+      String(r.powierzchnia).replace(',', '.')
+    );
+
+    const cena = Number(
+      String(r.cena).replace(',', '.')
+    );
+
+    return {
+      ...r,
+      cenaM2:
+        powierzchnia > 0 && cena > 0
+          ? Math.round(cena / powierzchnia)
+          : null
+    };
+  });
+
+console.log('Lokale mieszkalne:', mieszkania.length);
+console.table(mieszkania);
+
       console.log('Liczba pobranych rekordów:', records.length);
       console.table(records);
 
