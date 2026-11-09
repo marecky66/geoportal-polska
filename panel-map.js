@@ -6,11 +6,12 @@
   const content = document.getElementById('mapToolsContent');
   const adminLayers = document.getElementById('rightLayersAdmin');
   const esgLayers = document.getElementById('rightLayersEsg');
+  const rcnLayers = document.getElementById('rightLayersRcn');
   const zoomIn = document.getElementById('mapZoomIn');
   const zoomOut = document.getElementById('mapZoomOut');
   const zoomValue = document.getElementById('mapZoomValue');
 
-  if (!panel || !toggle || !content || !adminLayers || !esgLayers ||
+  if (!panel || !toggle || !content || !adminLayers || !esgLayers || !rcnLayers ||
       !zoomIn || !zoomOut || !zoomValue || typeof map === 'undefined') {
     console.error('panel-map.js: brak elementów prawego panelu lub mapy Leaflet.');
     return;
@@ -40,10 +41,12 @@
     const adminActive = document.getElementById('tabAdmin')?.getAttribute('aria-selected') === 'true';
     adminLayers.hidden = !adminActive;
     esgLayers.hidden = !esgActive;
+    rcnLayers.hidden = document.getElementById('tabRcn')?.getAttribute('aria-selected') !== 'true';
   }
   document.getElementById('tabAdmin')?.addEventListener('click', syncModule);
   document.getElementById('tabEsg')?.addEventListener('click', syncModule);
   document.getElementById('tabDem')?.addEventListener('click', syncModule);
+  document.getElementById('tabRcn')?.addEventListener('click', syncModule);
   syncModule();
 
   // Sterowanie przybliżeniem mapy.
