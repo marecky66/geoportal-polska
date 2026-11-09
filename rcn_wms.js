@@ -196,6 +196,8 @@
     return ENDPOINT+'?'+params;
   }
   map.on('click',async(event)=>{
+    // Gdy aktywne WFS, nie nadpisuj listy rekordow wynikiem WMS.
+    if (window.drkRcnWfsEnabled) return;
     if(document.getElementById('tabRcn')?.getAttribute('aria-selected')!=='true')return;
     const enabled=entries.filter(([id])=>document.getElementById(id)?.checked);
     if(!enabled.length){setStatus('Włącz co najmniej jedną warstwę RCN w prawym panelu.');return;}
