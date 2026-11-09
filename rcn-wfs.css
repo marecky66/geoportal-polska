@@ -1,0 +1,4 @@
+/* Przyciski filtrowania rekordow WFS */
+.rcn-wfs-filters { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:4px; margin:9px 0; }
+.rcn-wfs-filters button { padding:7px 2px; min-width:0; border:1px solid #c6d6df; border-radius:6px; background:#eef3f6; color:#1a3e55; cursor:pointer; font-size:10px; font-weight:700; }
+.rcn-wfs-filters button.active { background:#26738c; border-color:#26738c; color:white; }
