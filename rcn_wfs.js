@@ -13,25 +13,37 @@
   const ENDPOINT = 'https://mapy.geoportal.gov.pl/wss/service/rcn';
   const PAGE_SIZE = 100, MAX_RECORDS = 1000;
   let generation = 0, allRecords = [], selected = 'mieszkalna';
+  let skippedGeometry = 0;
   let truncated = false, lastLocation = null, radius = 30, running = false;
-  const fmt = (n,d=0) => Number(n).toLocaleString('pl-PL',{minimumFractionDigits:d,maximumFractionDigits:d});
+  const fmt = (n,d=0) => Number(n).toLocaleString('pl-PL',{useGrouping:true,minimumFractionDigits:d,maximumFractionDigits:d}).replace(/[\u202f\u00a0]/g,'\u00a0');
   const esc = x => String(x??'');
   const elt = (tag,cls,txt) => {const n=document.createElement(tag); if(cls)n.className=cls; if(txt!==undefined)n.textContent=esc(txt); return n;};
   const numeric = raw => {const s=String(raw??'').replace(/\s/g,'').replace(',','.'); if(!s)return null; const n=Number(s);return Number.isFinite(n)&&n>0?n:null;};
   const dateISO = raw => { const m=String(raw||'').match(/\d{4}-\d{2}-\d{2}/); return m?m[0]:''; };
   const missing = x => x === null || x === undefined || x === '';
-  const getKind = r => (r.funkcja||'').trim().toLowerCase()==='mieszkalna'?'mieszkalna':'pozostale';
-  function setStatus(value){status.textContent=value;status.dataset.level='unknown';}
+
+const getKind = r => {
+  const f = (r.funkcja || '').trim().toLowerCase();
+
+  if (f === 'mieszkalna') return 'mieszkalna';
+
+  if (/garaż|garaz|postoj/.test(f)) {
+    return 'postojowe';
+  }
+
+  return 'pozostale';
+};
+
   // Elementy sa tworzone w JS, nie wymagaja podmiany calego index.html.
   const heading = document.querySelector('#moduleRcn .risk-heading');
   if(heading)heading.textContent='Rejestr Cen Nieruchomości';
   const control = elt('div','rcn-radius-control');
   const lbl = elt('label','rcn-radius-label','Promień wyszukiwania RCN');
   lbl.htmlFor='rcnRadius';
-  const slider = elt('input'); slider.type='range';slider.id='rcnRadius';slider.min='0';slider.max='100';slider.step='5';slider.value=String(radius);
+  const slider = elt('input'); slider.type='range';slider.id='rcnRadius';slider.min='0';slider.max='500';slider.step='5';slider.value=String(radius);
   const sliderValue=elt('strong','rcn-radius-value',radius+' m');
   const sliderRow=elt('div','rcn-radius-line'); sliderRow.append(slider,sliderValue);
-  const endLabels=elt('div','rcn-radius-ends');endLabels.append(elt('span','','0 m'),elt('span','','100 m'));
+  const endLabels=elt('div','rcn-radius-ends');endLabels.append(elt('span','','0 m'),elt('span','','500 m'));
   control.append(lbl,sliderRow,endLabels);
   // Slajder pomiedzy tytulem a "Identyfikacja transakcji RCN".
   const section = document.getElementById('moduleRcn');
@@ -50,94 +62,92 @@
     ['LOK_NR_KOND','Kondygnacja'],['LOK_POW_UZYT','Pow. użytkowa'],
     ['LOK_POW_PRZYN','Pow. przynależna']
   ];
-  function findAddress(raw) {
-    let s=String(raw||'').replace(/^(MSC:|MIEJSCOWOSC:)/i,'').replace(/;/g,', ').replace(/\bUL:/gi,'ul. ').replace(/\bNR_PORZ:/gi,'').replace(/\s+/g,' ').trim();
-    s=s.replace(/,\s*,/g,',').replace(/\s+,/g,',').replace(/\s*:\s*/g,' ');
-    const chunks=s.split(',').map(x=>x.trim()).filter(Boolean);
-    if(!chunks.length)return 'Adres nieudostępniony w RCN';
-    // Znane pola MSC:Warszawa;UL:ulica Sokołowska;NR_PORZ:9;NR_LOK:259
-    let city=(raw.match(/(?:^|[;,])\s*MSC:([^;,]+)/i)||[])[1];
-    let street=(raw.match(/(?:^|[;,])\s*UL:([^;,]+)/i)||[])[1];
-    let no=(raw.match(/(?:^|[;,])\s*NR_PORZ:([^;,]+)/i)||[])[1];
-    let unit=(raw.match(/(?:^|[;,])\s*NR_LOK:([^;,]+)/i)||[])[1];
-    if(city&&street&&no){street=street.replace(/^ulica\s+/i,'').trim();return `${city.trim()}, ${street.trim()} ${no.trim()}${unit?'/'+unit.trim():''}`;}
-    return s;
+  function findAddress(raw, record) {
+    const text = String(raw || '');
+    const field = name => {
+      const match = text.match(new RegExp('(?:^|[;,])\\s*'+name+':\\s*([^;,]+)','i'));
+      return match?.[1]?.trim() || '';
+    };
+    const city = field('MSC') || field('MIEJSCOWOSC');
+    const street = field('UL').replace(/^(ulica|ul\.)\s+/i,'').trim();
+    const building = field('NR_PORZ');
+    // Numer lokalu pokazujemy tylko, gdy WFS przekazał go jawnie.
+    // Końcówka LOK_ID_LOKALU nie musi być numerem porządkowym mieszkania.
+    const unit = field('NR_LOK') || field('NR_LOKALU');
+    if (city && street && building) return `${city}, ${street} ${building}${unit ? '/'+unit : ''}`;
+    return text.replace(/;/g, ', ').replace(/\b(MSC|UL|NR_PORZ|NR_LOK):/gi,'').trim()
+      || 'Adres nieudostępniony w RCN';
   }
   function titleFor(r,i){return (getKind(r)==='mieszkalna'?'Lokal mieszkalny':r.funkcja?'Lokal '+r.funkcja:'Lokal')+' #'+(i+1);}
-  function selectRecords(){return allRecords.filter(r=>selected==='all'||getKind(r)===selected).sort((a,b)=>b.date.localeCompare(a.date)||String(a.key).localeCompare(String(b.key)));}
-  // Laczenie skladnikow tej samej czynnosci. Najpierw ID transakcji, potem akt+data+strony.
-  // Sam numer repertorium nie wystarcza: rozni notariusze moga stosowac takie same numery.
-  function groupKey(r){
-    const p=r.props;
-    const tx=(p.TRAN_LOKALNY_ID_IIP||'').trim();
-    const doc=(p.DOK_OZNACZENIE||'').trim(), date=r.date;
-    const creator=(p.DOK_TWORCA||'').trim(), county=(p.TERYT||'').trim();
-    const total=r.transactionPrice;
-    // Rozne obiekty moga miec oddzielne identyfikatory, ale wspolny akt.
-    // Bez autora dokumentu nie laczymy na podstawie samego numeru repertorium.
-    if(doc && date && creator && total!==null)
-      return 'act|'+doc+'|'+date+'|'+creator+'|'+county+'|'+total.toFixed(2);
-    return tx?'tx|'+tx:'';
-  }
-  function applyPackagePrices(items){
-    const groups = new Map();
-    for(const r of items){r.effectivePrice=r.price;r.priceBasis='lokal';r.packageCount=1; r.packagePrice=null;
-      const k=groupKey(r);if(k){if(!groups.has(k))groups.set(k,[]);groups.get(k).push(r);}}
-    for(const group of groups.values()){
-      // Obecność innych skladnikow (np. garazu) wymaga co najmniej dwoch ROZNYCH lokali.
-      const ids=new Set(group.map(r=>r.identyfikator||r.key));
-      if(ids.size<2)continue;
-      const totalPrices=group.map(r=>r.transactionPrice).filter(x=>x!==null);
-      if(!totalPrices.length)continue;
-      // Cena transakcji jest czesto powtorzona na kazdym skladniku; NIE sumujemy jej.
-      const uniqueTotals=[...new Set(totalPrices.map(n=>n.toFixed(2)))];
-      if(uniqueTotals.length!==1)continue;
-      const total=totalPrices[0];
-      // Nie stosujemy ceny lacznej do rekordow, gdy nie ma potwierdzenia wieloskladnikowej transakcji.
-      // Gdy cena lokalu = cena laczna, nie ma podstaw do doliczania dalszej kwoty.
-      const hasAncillary=group.some(r=>/gara[zż]|postoj/i.test(r.funkcja));
-      if(!hasAncillary)continue;
-      // Lokal glowny: mieszkalny lub inny NIEgarazowy. Ceny pakietu nie przypisujemy miejscom postojowym.
-      const mains=group.filter(r=>!/gara[zż]|postoj/i.test(r.funkcja)&&r.area!==null);
-      // Nie wolno przypisac jednej ceny kilku samodzielnym lokalom glownym.
-      if(mains.length!==1)continue;
-      const principal=mains[0];
-      principal.effectivePrice=total;principal.priceBasis='akt_łączny';principal.packageCount=ids.size;principal.packagePrice=total;
+  function selectRecords() {
+  return allRecords
+    .filter(r => getKind(r) === selected)
+    .sort((a, b) =>
+      b.date.localeCompare(a.date) ||
+      String(a.key).localeCompare(String(b.key))
+    );
+}
+  // Jednostkowa cena lokalu = cena przypisana lokalowi / powierzchnia lokalu.
+  // TRAN_CENA_BRUTTO jest widoczna jedynie w szczegółach, bez doliczania garażu.
+  function applyPackagePrices(items) {
+    for (const r of items) {
+      r.effectivePrice = r.price;
+      r.priceBasis = 'lokal';
+      r.unit = r.area !== null && r.area > 0 && r.price !== null
+        ? r.price / r.area : null;
     }
-    for(const r of items)r.unit=r.area!==null&&r.effectivePrice!==null?Math.round(r.effectivePrice/r.area):null;
   }
-  function renderStats(records){
-    stats.replaceChildren();stats.hidden=true;
-    if(allRecords.length<=1)return;
-    const valid=records.filter(r=>['2025','2026'].includes(r.date.slice(0,4))&&r.unit!==null&&Number.isFinite(r.unit));
-    const hdr=elt('div','rcn-stats-title','Ceny jednostkowe — transakcje 2025–2026');
-    const sub=elt('p','rcn-stats-sub',`Liczba rekordów z ceną i powierzchnią: ${valid.length}. Statystyka dotyczy wybranego filtra i otoczenia punktu.`);
-    stats.append(hdr,sub);
-    if(!valid.length){stats.append(elt('p','rcn-stats-sub','Brak danych do wyliczenia statystyk.'));stats.hidden=false;return;}
-    const ordered=valid.map(r=>r.unit).sort((a,b)=>a-b);
-    const sum=ordered.reduce((a,b)=>a+b,0),n=ordered.length;
-    const med=n%2?ordered[(n-1)/2]:(ordered[n/2-1]+ordered[n/2])/2;
-    const values=[['Średnia',sum/n],['Mediana',med],['Minimum',ordered[0]],['Maksimum',ordered[n-1]]];
-    const grid=elt('div','rcn-stats-grid');for(const [k,v] of values){const item=elt('div','rcn-stat');item.append(elt('small','',k),elt('strong','',fmt(Math.round(v))+' zł/m²'));grid.append(item);}stats.append(grid);stats.hidden=false;
+  function renderStats(records) {
+    stats.replaceChildren();
+    stats.hidden = true;
+    if (records.length <= 1) return;
+    const parking = selected === 'postojowe';
+    const valid = records.filter(r =>
+      ['2025', '2026'].includes(r.date.slice(0, 4)) &&
+      (parking ? r.price !== null : r.unit !== null)
+    );
+    const label = parking ? 'Ceny całkowite' : 'Ceny jednostkowe';
+    stats.append(
+      elt('div','rcn-stats-title',`${label} — transakcje 2025–2026`),
+      elt('p','rcn-stats-sub',`Statystyka dotyczy wybranego filtra i otoczenia punktu dla ${valid.length} rekordów.`)
+    );
+    if (!valid.length) {
+      stats.append(elt('p','rcn-stats-sub','Brak danych do wyliczenia statystyk.'));
+      stats.hidden = false;
+      return;
+    }
+    const values = valid.map(r => parking ? r.price : r.unit).sort((a,b) => a-b);
+    const n = values.length;
+    const mean = values.reduce((a,b)=>a+b,0) / n;
+    const median = n%2 ? values[(n-1)/2] : (values[n/2-1]+values[n/2])/2;
+    const measures = [['Średnia',mean],['Mediana',median],['Minimum',values[0]],['Maksimum',values[n-1]]];
+    const grid = elt('div','rcn-stats-grid');
+    for (const [name,value] of measures) {
+      const cell = elt('div','rcn-stat');
+      cell.append(elt('small','',name),elt('strong','',fmt(Math.round(value)) + (parking ? ' zł' : ' zł/m²')));
+      grid.append(cell);
+    }
+    stats.append(grid);
+    stats.hidden = false;
   }
   function render(){
     results.replaceChildren();const chosen=selectRecords();renderStats(chosen);
     results.append(elt('div','rcn-list-head',`RCN WFS: ${chosen.length} z ${allRecords.length} pobranych rekordów`));
     results.append(elt('p','rcn-detail-note',`Wyniki z otoczenia punktu (promień ${radius} m), niekoniecznie z jednego budynku.`));
+    if(skippedGeometry)results.append(elt('p','rcn-detail-note',`Pominięto ${skippedGeometry} rekordów bez współrzędnych, których nie można zweryfikować względem bufora.`));
     if(truncated)results.append(elt('p','rcn-detail-note',`Osiągnięto limit ${MAX_RECORDS} rekordów. Wyniki i statystyki mogą być niepełne.`));
     if(!chosen.length){results.append(elt('p','rcn-detail-note','Brak rekordów dla wybranego filtra.'));return;}
     for(const [i,r] of chosen.entries()){
       const card=elt('details','rcn-list-item');const summary=elt('summary');
       summary.append(elt('div','rcn-list-title',titleFor(r,i)));
-      summary.append(elt('div','rcn-list-address',findAddress(r.props.LOK_ADRES)));
+      summary.append(elt('div','rcn-list-address',findAddress(r.props.LOK_ADRES, r)));
       const grid=elt('div','rcn-list-grid');
-      const vals=[['Powierzchnia',r.area===null?'Brak danych':fmt(r.area,2)+' m²'],['Cena',fmtPrice(r.effectivePrice)],['Cena za m²',r.unit===null?'Brak danych':fmt(r.unit)+' zł/m²'],['Data transakcji',r.date||'Brak danych']];
+      const vals=[['Powierzchnia',r.area===null?'Brak danych':fmt(r.area,2)+' m²'],['Cena',fmtPrice(r.effectivePrice)],['Cena za m²',r.unit===null?'Brak danych':fmt(Math.round(r.unit))+' zł/m²'],['Data transakcji',r.date||'Brak danych']];
       for(const [k,v] of vals){const cell=elt('div','rcn-list-cell');cell.append(elt('small','',k),elt('strong','',v));grid.append(cell);}
       summary.append(grid);card.append(summary);
       const detail=elt('div','rcn-detail');
       detail.append(elt('p','rcn-detail-title','Dane transakcji RCN'));
-      if(r.priceBasis==='akt_łączny')detail.append(elt('p','rcn-package-note',`Cena jednostkowa liczona z łącznej ceny aktu (${fmtPrice(r.packagePrice)}) i powierzchni lokalu głównego. Powiązanych lokali: ${r.packageCount}.`));
-      for(const [key,label] of detailFields){let val=r.props[key]||'';
+            for(const [key,label] of detailFields){let val=r.props[key]||'';
         if(key==='LOK_CENA_BRUTTO')val=missing(val)?'—':fmtPrice(numeric(val));
         if(key==='TRAN_CENA_BRUTTO')val=missing(val)?'—':fmtPrice(numeric(val));
         if(key==='LOK_POW_UZYT'||key==='LOK_POW_PRZYN')val=missing(val)?'—':(numeric(val)===null?val:fmt(numeric(val),2)+' m²');
@@ -147,7 +157,11 @@
       card.append(detail);results.append(card);
     }
   }
-  function setupFilters(){let bar=document.getElementById('rcnWfsFilters');if(bar)return;bar=elt('div','rcn-wfs-filters');bar.id='rcnWfsFilters';for(const [v,title] of [['mieszkalna','Mieszkalne'],['pozostale','Pozostałe'],['all','Wszystkie']]){const btn=elt('button','',title);btn.type='button';btn.dataset.filter=v;btn.addEventListener('click',()=>{selected=v;updateFilter();render();});bar.append(btn);}results.parentElement.insertBefore(bar,results);updateFilter();}
+  function setupFilters(){let bar=document.getElementById('rcnWfsFilters');if(bar)return;bar=elt('div','rcn-wfs-filters');bar.id='rcnWfsFilters';for(const [v,title] of [
+  ['mieszkalna','Mieszkalne'],
+  ['postojowe','Miejsca postojowe'],
+  ['pozostale','Pozostałe']
+]){const btn=elt('button','',title);btn.type='button';btn.dataset.filter=v;btn.addEventListener('click',()=>{selected=v;updateFilter();render();});bar.append(btn);}results.parentElement.insertBefore(bar,results);updateFilter();}
   function updateFilter(){document.querySelectorAll('#rcnWfsFilters button').forEach(b=>{const active=b.dataset.filter===selected;b.classList.toggle('active',active);b.setAttribute('aria-pressed',String(active));});}
   function parseXml(xml){
     if(xml.getElementsByTagName('parsererror').length)throw Error('Nieprawidłowy XML WFS');
@@ -156,19 +170,46 @@
     return members.map(member=>{
       const obj=member.firstElementChild;if(!obj)return null;const props={};for(const c of obj.children)props[c.localName]=c.textContent.trim();
       const area=numeric(props.LOK_POW_UZYT),price=numeric(props.LOK_CENA_BRUTTO),transactionPrice=numeric(props.TRAN_CENA_BRUTTO);
-      return {key:obj.getAttributeNS('http://www.opengis.net/gml/3.2','id')||obj.getAttribute('gml:id')||[props.TRAN_LOKALNY_ID_IIP,props.LOK_ID_LOKALU,props.DOK_OZNACZENIE].join('|'),identyfikator:props.LOK_ID_LOKALU||'',funkcja:props.LOK_FUNKCJA||'',date:dateISO(props.DOK_DATA),area,price,transactionPrice,props};
+      const geom = [...obj.children].find(c=>c.localName==='GEOMETRIA');
+      const posText = geom && [...geom.getElementsByTagName('*')].find(c=>c.localName==='pos')?.textContent.trim();
+      const pair = posText?.split(/\s+/).map(Number);
+      const point2180 = pair?.length>=2 && pair.slice(0,2).every(Number.isFinite)
+        ? {x: pair[1], y: pair[0]} : null;
+      return {key:obj.getAttributeNS('http://www.opengis.net/gml/3.2','id')||obj.getAttribute('gml:id')||[props.TRAN_LOKALNY_ID_IIP,props.LOK_ID_LOKALU,props.DOK_OZNACZENIE].join('|'),identyfikator:props.LOK_ID_LOKALU||'',funkcja:props.LOK_FUNKCJA||'',date:dateISO(props.DOK_DATA),area,price,transactionPrice,point2180,props};
     }).filter(Boolean);
   }
   async function fetchPage(filter,offset){const q=new URLSearchParams({SERVICE:'WFS',VERSION:'2.0.0',REQUEST:'GetFeature',TYPENAMES:'ms:lokale',COUNT:String(PAGE_SIZE),STARTINDEX:String(offset),FILTER:filter});const response=await fetch(ENDPOINT+'?'+q);if(!response.ok)throw Error('WFS HTTP '+response.status);return parseXml(new DOMParser().parseFromString(await response.text(),'application/xml'));}
-  function makeFilter(lat,lon){const [x,y]=proj4('EPSG:4326','EPSG:2180',[lon,lat]);if(!Number.isFinite(x)||!Number.isFinite(y))throw Error('Błąd transformacji do EPSG:2180');const r=Math.max(.01,radius);return `<fes:Filter xmlns:fes="http://www.opengis.net/fes/2.0" xmlns:gml="http://www.opengis.net/gml/3.2"><fes:BBOX><fes:ValueReference>geom</fes:ValueReference><gml:Envelope srsName="EPSG:2180"><gml:lowerCorner>${y-r} ${x-r}</gml:lowerCorner><gml:upperCorner>${y+r} ${x+r}</gml:upperCorner></gml:Envelope></fes:BBOX></fes:Filter>`;}
-  async function search(lat,lon){if(!Number.isFinite(lat)||!Number.isFinite(lon))return;const mine=++generation;lastLocation={lat,lon};allRecords=[];truncated=false;running=true;stats.hidden=true;setStatus('Pobieranie rekordów RCN…');results.textContent='Trwa pobieranie…';
-    try{const filter=makeFilter(lat,lon),seen=new Set();let complete=false;
-      for(let offset=0;offset<MAX_RECORDS;offset+=PAGE_SIZE){const page=await fetchPage(filter,offset);if(mine!==generation)return;for(const r of page)if(!seen.has(r.key)){seen.add(r.key);allRecords.push(r);}if(page.length<PAGE_SIZE){complete=true;break;}}
+  function makeFilter(lat,lon){const [x,y]=proj4('EPSG:4326','EPSG:2180',[lon,lat]);if(!Number.isFinite(x)||!Number.isFinite(y))throw Error('Błąd transformacji do EPSG:2180');const r=Math.max(0.5,radius);return `<fes:Filter xmlns:fes="http://www.opengis.net/fes/2.0" xmlns:gml="http://www.opengis.net/gml/3.2"><fes:BBOX><fes:ValueReference>geom</fes:ValueReference><gml:Envelope srsName="EPSG:2180"><gml:lowerCorner>${y-r} ${x-r}</gml:lowerCorner><gml:upperCorner>${y+r} ${x+r}</gml:upperCorner></gml:Envelope></fes:BBOX></fes:Filter>`;}
+  async function search(lat,lon){if(!Number.isFinite(lat)||!Number.isFinite(lon))return;const mine=++generation;lastLocation={lat,lon};allRecords=[];truncated=false;skippedGeometry=0;running=true;updateBuffer();stats.hidden=true;setStatus('Pobieranie rekordów RCN…');results.textContent='Trwa pobieranie…';
+    try{const filter=makeFilter(lat,lon),seen=new Set();let complete=false;const [cx,cy]=proj4('EPSG:4326','EPSG:2180',[lon,lat]);
+      for(let offset=0;offset<MAX_RECORDS;offset+=PAGE_SIZE){const page=await fetchPage(filter,offset);if(mine!==generation)return;for(const r of page)if(!seen.has(r.key)){seen.add(r.key);if(!r.point2180){skippedGeometry++;continue;}const dx=r.point2180.x-cx,dy=r.point2180.y-cy;if(Math.hypot(dx,dy)<=Math.max(0.5,radius))allRecords.push(r);}if(page.length<PAGE_SIZE){complete=true;break;}}
       if(mine!==generation)return;truncated=!complete;applyPackagePrices(allRecords);running=false;setStatus(allRecords.length?`${allRecords.length} rekordów z otoczenia punktu${truncated?' (osiągnięto limit)':''}.`:'Nie znaleziono rekordów z otoczenia punktu.');render();
     }catch(error){if(mine!==generation)return;running=false;console.error('RCN WFS',error);setStatus('Błąd pobierania danych: '+error.message);results.textContent='Nie udało się pobrać danych.';}
   }
-  function reset(){++generation;allRecords=[];lastLocation=null;truncated=false;running=false;selected='mieszkalna';updateFilter();stats.hidden=true;results.textContent='Nie wybrano lokalizacji.';setStatus('Wyszukaj adres, działkę lub kliknij mapę w module Rzeczoznawca.');}
-  slider.addEventListener('input',()=>{radius=Number(slider.value);sliderValue.textContent=radius+' m';});
+  function reset(){++generation;allRecords=[];lastLocation=null;truncated=false;skippedGeometry=0;running=false;updateBuffer();selected='mieszkalna';updateFilter();stats.hidden=true;results.textContent='Nie wybrano lokalizacji.';setStatus('Wyszukaj adres, działkę lub kliknij mapę w module Rzeczoznawca.');}
+  // Półprzezroczysty, rzeczywisty bufor pomiarowy w Leaflet.
+  // WFS używa BBOX tylko do pobrania kandydatów, powyżej stosujemy filtr kołowy.
+  const bufferPane = 'rcnBufferPane';
+  if (!mapInstance.getPane(bufferPane)) {
+    mapInstance.createPane(bufferPane);
+    mapInstance.getPane(bufferPane).style.zIndex = 420;
+    mapInstance.getPane(bufferPane).style.pointerEvents = 'none';
+  }
+  let bufferLayer = null;
+  function updateBuffer() {
+    if (bufferLayer) { mapInstance.removeLayer(bufferLayer); bufferLayer = null; }
+    const active = document.getElementById('tabRcn')?.getAttribute('aria-selected') === 'true';
+    if (!active || !lastLocation || radius <= 0) return;
+    bufferLayer = L.circle([lastLocation.lat,lastLocation.lon], {
+      pane: bufferPane, radius, color: '#26738c', weight: 2,
+      opacity: 0.85, fillColor: '#26738c', fillOpacity: 0.12,
+      interactive: false
+    }).addTo(mapInstance);
+  }
+  ['tabAdmin','tabEsg','tabDem','tabRcn'].forEach(id => {
+    document.getElementById(id)?.addEventListener('click', () => setTimeout(updateBuffer,0));
+  });
+  slider.addEventListener('input',()=>{radius=Number(slider.value);sliderValue.textContent=radius+' m';updateBuffer();});
   slider.addEventListener('change',()=>{if(lastLocation)search(lastLocation.lat,lastLocation.lon);});
   setupFilters();clear.addEventListener('click',reset);document.getElementById('resetBtn')?.addEventListener('click',reset);
   document.addEventListener('drk:location-selected',event=>search(Number(event.detail?.lat),Number(event.detail?.lon)));
