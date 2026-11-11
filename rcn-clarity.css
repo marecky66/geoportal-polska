@@ -1,0 +1,5 @@
+/* Dodatkowe style kart RCN — ceny i adresy */
+.rcn-stat strong,.rcn-list-cell strong {font-variant-numeric:tabular-nums;white-space:nowrap;}
+.rcn-list-address {white-space:normal;overflow-wrap:anywhere;line-height:1.35;}
+.rcn-wfs-filters {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;}
+.rcn-wfs-filters button {min-width:0;white-space:normal;overflow-wrap:break-word;line-height:1.2;}
