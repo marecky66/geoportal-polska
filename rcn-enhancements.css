@@ -1,0 +1,19 @@
+/* Geoportal DRK - udoskonalenia panelu RCN */
+.rcn-radius-control{margin:8px 0 12px;padding:9px 10px;border:1px solid #d3dee5;border-radius:8px;background:#f7fafc;color:#15384d}
+.rcn-radius-label{display:block;font-size:12px;font-weight:700;margin-bottom:6px}
+.rcn-radius-line{display:flex;align-items:center;gap:9px}
+.rcn-radius-line input[type=range]{width:100%;min-width:0;accent-color:#26738c}
+.rcn-radius-value{min-width:37px;text-align:right;font-size:12px}
+.rcn-radius-ends{display:flex;justify-content:space-between;font-size:10px;color:#617887;margin-top:3px;margin-right:46px}
+.rcn-stats{border:1px solid #cbd9e1;background:#f7fafc;border-radius:8px;margin:12px 0;padding:10px}
+.rcn-stats[hidden]{display:none!important}
+.rcn-stats-title{font-size:12px;font-weight:750;color:#15384d;margin-bottom:5px}
+.rcn-stats-sub{font-size:10px;color:#607786;line-height:1.4;margin:5px 0}
+.rcn-stats-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-top:8px}
+.rcn-stat{background:#fff;border:1px solid #e0e8ee;border-radius:7px;padding:7px;min-width:0}
+.rcn-stat small{display:block;color:#617887;font-size:10px}
+.rcn-stat strong{display:block;margin-top:3px;color:#15384d;font-size:13px;font-variant-numeric:tabular-nums}
+.rcn-list-title{font-weight:700}
+.rcn-list-address{font-size:11px;margin:2px 0 7px;color:#365b70;overflow-wrap:anywhere}
+.rcn-package-note{font-size:11px;line-height:1.4;background:#fef4d8;padding:8px;border-radius:6px;color:#614907}
+#rcnScaleRatio{white-space:nowrap;font-size:10px;color:#496a7b;margin-left:6px}
