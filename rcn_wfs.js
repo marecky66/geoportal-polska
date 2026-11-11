@@ -13,7 +13,7 @@
   const ENDPOINT = 'https://mapy.geoportal.gov.pl/wss/service/rcn';
   const PAGE_SIZE = 100, MAX_RECORDS = 1000;
   let generation = 0, allRecords = [], selected = 'mieszkalna';
-  let skippedGeometry = 0;
+  let skippedGeometry = 0, diagnostic = null, bboxFallback = false;
   let truncated = false, lastLocation = null, radius = 30, running = false;
   const fmt = (n,d=0) => Number(n).toLocaleString('pl-PL',{useGrouping:true,minimumFractionDigits:d,maximumFractionDigits:d}).replace(/[\u202f\u00a0]/g,'\u00a0');
   const esc = x => String(x??'');
@@ -100,6 +100,7 @@ const getKind = r => {
   function renderStats(records) {
     stats.replaceChildren();
     stats.hidden = true;
+    if (bboxFallback) return;
     if (records.length <= 1) return;
     const parking = selected === 'postojowe';
     const valid = records.filter(r =>
@@ -134,6 +135,7 @@ const getKind = r => {
     results.replaceChildren();const chosen=selectRecords();renderStats(chosen);
     results.append(elt('div','rcn-list-head',`RCN WFS: ${chosen.length} z ${allRecords.length} pobranych rekordów`));
     results.append(elt('p','rcn-detail-note',`Wyniki z otoczenia punktu (promień ${radius} m), niekoniecznie z jednego budynku.`));
+    if(bboxFallback)results.append(elt('p','rcn-detail-note', 'UWAGA: wyświetlono dane z prostokąta BBOX, nie potwierdzono przynależności do koła. Statystyki wyłączono.'));
     if(skippedGeometry)results.append(elt('p','rcn-detail-note',`Pominięto ${skippedGeometry} rekordów bez współrzędnych, których nie można zweryfikować względem bufora.`));
     if(truncated)results.append(elt('p','rcn-detail-note',`Osiągnięto limit ${MAX_RECORDS} rekordów. Wyniki i statystyki mogą być niepełne.`));
     if(!chosen.length){results.append(elt('p','rcn-detail-note','Brak rekordów dla wybranego filtra.'));return;}
@@ -180,13 +182,65 @@ const getKind = r => {
   }
   async function fetchPage(filter,offset){const q=new URLSearchParams({SERVICE:'WFS',VERSION:'2.0.0',REQUEST:'GetFeature',TYPENAMES:'ms:lokale',COUNT:String(PAGE_SIZE),STARTINDEX:String(offset),FILTER:filter});const response=await fetch(ENDPOINT+'?'+q);if(!response.ok)throw Error('WFS HTTP '+response.status);return parseXml(new DOMParser().parseFromString(await response.text(),'application/xml'));}
   function makeFilter(lat,lon){const [x,y]=proj4('EPSG:4326','EPSG:2180',[lon,lat]);if(!Number.isFinite(x)||!Number.isFinite(y))throw Error('Błąd transformacji do EPSG:2180');const r=Math.max(0.5,radius);return `<fes:Filter xmlns:fes="http://www.opengis.net/fes/2.0" xmlns:gml="http://www.opengis.net/gml/3.2"><fes:BBOX><fes:ValueReference>geom</fes:ValueReference><gml:Envelope srsName="EPSG:2180"><gml:lowerCorner>${y-r} ${x-r}</gml:lowerCorner><gml:upperCorner>${y+r} ${x+r}</gml:upperCorner></gml:Envelope></fes:BBOX></fes:Filter>`;}
-  async function search(lat,lon){if(!Number.isFinite(lat)||!Number.isFinite(lon))return;const mine=++generation;lastLocation={lat,lon};allRecords=[];truncated=false;skippedGeometry=0;running=true;updateBuffer();stats.hidden=true;setStatus('Pobieranie rekordów RCN…');results.textContent='Trwa pobieranie…';
-    try{const filter=makeFilter(lat,lon),seen=new Set();let complete=false;const [cx,cy]=proj4('EPSG:4326','EPSG:2180',[lon,lat]);
-      for(let offset=0;offset<MAX_RECORDS;offset+=PAGE_SIZE){const page=await fetchPage(filter,offset);if(mine!==generation)return;for(const r of page)if(!seen.has(r.key)){seen.add(r.key);if(!r.point2180){skippedGeometry++;continue;}const dx=r.point2180.x-cx,dy=r.point2180.y-cy;if(Math.hypot(dx,dy)<=Math.max(0.5,radius))allRecords.push(r);}if(page.length<PAGE_SIZE){complete=true;break;}}
-      if(mine!==generation)return;truncated=!complete;applyPackagePrices(allRecords);running=false;setStatus(allRecords.length?`${allRecords.length} rekordów z otoczenia punktu${truncated?' (osiągnięto limit)':''}.`:'Nie znaleziono rekordów z otoczenia punktu.');render();
-    }catch(error){if(mine!==generation)return;running=false;console.error('RCN WFS',error);setStatus('Błąd pobierania danych: '+error.message);results.textContent='Nie udało się pobrać danych.';}
+  async function search(lat,lon){
+    if(!Number.isFinite(lat)||!Number.isFinite(lon))return;
+    const mine=++generation;
+    lastLocation={lat,lon};allRecords=[];truncated=false;skippedGeometry=0;
+    bboxFallback=false;diagnostic=null;running=true;updateBuffer();
+    stats.hidden=true;setStatus('Pobieranie rekordów RCN…');results.textContent='Trwa pobieranie…';
+    try {
+      const filter=makeFilter(lat,lon),seen=new Set();
+      let complete=false;
+      const [cx,cy]=proj4('EPSG:4326','EPSG:2180',[lon,lat]);
+      const bboxRecords=[];
+      const counts={received:0,unique:0,inside:0,outside:0,missingGeometry:0};
+      const sample=[];
+      for(let offset=0;offset<MAX_RECORDS;offset+=PAGE_SIZE){
+        const page=await fetchPage(filter,offset);
+        if(mine!==generation)return;
+        counts.received+=page.length;
+        for(const r of page){
+          if(seen.has(r.key))continue;
+          seen.add(r.key);counts.unique++;
+          bboxRecords.push(r);
+          if(!r.point2180){counts.missingGeometry++;continue;}
+          const dx=r.point2180.x-cx,dy=r.point2180.y-cy;
+          const dist=Math.hypot(dx,dy);
+          if(sample.length<5)sample.push({key:r.key,x:r.point2180.x,y:r.point2180.y,distance_m:Math.round(dist)});
+          if(dist<=Math.max(0.5,radius)){allRecords.push(r);counts.inside++;}
+          else counts.outside++;
+        }
+        if(page.length<PAGE_SIZE){complete=true;break;}
+      }
+      if(mine!==generation)return;
+      truncated=!complete;
+      skippedGeometry=counts.missingGeometry;
+      diagnostic={lat,lon,radius,center2180:{x:cx,y:cy},counts,sample};
+      window.drkRcnWfsDebug=diagnostic;
+      console.info('RCN WFS DIAGNOSTYKA:',diagnostic);
+      if(allRecords.length===0 && bboxRecords.length>0){
+        bboxFallback=true;
+        allRecords=bboxRecords;
+        skippedGeometry=0;
+      }
+      applyPackagePrices(allRecords);running=false;
+      if(bboxFallback){
+        setStatus(`WFS zwrócił ${bboxRecords.length} rekordów, ale filtr kołowy nie potwierdził żadnego. Pokazano BBOX (wynik poglądowy).`);
+      }else{
+        setStatus(allRecords.length
+          ? `${allRecords.length} rekordów z otoczenia punktu${truncated?' (osiągnięto limit)':''}.`
+          : `Brak rekordów WFS w buforze ${radius} m. Sprawdź diagnostykę.`);
+      }
+      render();
+    }catch(error){
+      if(mine!==generation)return;
+      running=false;console.error('RCN WFS',error);
+      setStatus('Błąd pobierania danych: '+error.message);
+      results.textContent='Nie udało się pobrać danych.';
+    }
   }
-  function reset(){++generation;allRecords=[];lastLocation=null;truncated=false;skippedGeometry=0;running=false;updateBuffer();selected='mieszkalna';updateFilter();stats.hidden=true;results.textContent='Nie wybrano lokalizacji.';setStatus('Wyszukaj adres, działkę lub kliknij mapę w module Rzeczoznawca.');}
+
+  function reset(){++generation;allRecords=[];lastLocation=null;truncated=false;skippedGeometry=0;bboxFallback=false;diagnostic=null;running=false;updateBuffer();selected='mieszkalna';updateFilter();stats.hidden=true;results.textContent='Nie wybrano lokalizacji.';setStatus('Wyszukaj adres, działkę lub kliknij mapę w module Rzeczoznawca.');}
   // Półprzezroczysty, rzeczywisty bufor pomiarowy w Leaflet.
   // WFS używa BBOX tylko do pobrania kandydatów, powyżej stosujemy filtr kołowy.
   const bufferPane = 'rcnBufferPane';
