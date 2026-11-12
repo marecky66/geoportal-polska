@@ -40,10 +40,10 @@ const getKind = r => {
   const control = elt('div','rcn-radius-control');
   const lbl = elt('label','rcn-radius-label','Promień wyszukiwania RCN');
   lbl.htmlFor='rcnRadius';
-  const slider = elt('input'); slider.type='range';slider.id='rcnRadius';slider.min='0';slider.max='500';slider.step='5';slider.value=String(radius);
+  const slider = elt('input'); slider.type='range';slider.id='rcnRadius';slider.min='0';slider.max='300';slider.step='5';slider.value=String(radius);
   const sliderValue=elt('strong','rcn-radius-value',radius+' m');
   const sliderRow=elt('div','rcn-radius-line'); sliderRow.append(slider,sliderValue);
-  const endLabels=elt('div','rcn-radius-ends');endLabels.append(elt('span','','0 m'),elt('span','','500 m'));
+  const endLabels=elt('div','rcn-radius-ends');endLabels.append(elt('span','','0 m'),elt('span','','300 m'));
   control.append(lbl,sliderRow,endLabels);
   // Slajder pomiedzy tytulem a "Identyfikacja transakcji RCN".
   const section = document.getElementById('moduleRcn');
