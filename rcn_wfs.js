@@ -21,6 +21,12 @@
   const numeric = raw => {const s=String(raw??'').replace(/\s/g,'').replace(',','.'); if(!s)return null; const n=Number(s);return Number.isFinite(n)&&n>0?n:null;};
   const dateISO = raw => { const m=String(raw||'').match(/\d{4}-\d{2}-\d{2}/); return m?m[0]:''; };
   const missing = x => x === null || x === undefined || x === '';
+  
+function setStatus(message) {
+  status.textContent = message;
+  status.dataset.level = 'unknown';
+}
+
 
 const getKind = r => {
   const f = (r.funkcja || '').trim().toLowerCase();
