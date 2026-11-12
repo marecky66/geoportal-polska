@@ -79,8 +79,19 @@ const getKind = r => {
     const building = field('NR_PORZ');
     // Numer lokalu pokazujemy tylko, gdy WFS przekazał go jawnie.
     // Końcówka LOK_ID_LOKALU nie musi być numerem porządkowym mieszkania.
-    const unit = field('NR_LOK') || field('NR_LOKALU');
-    if (city && street && building) return `${city}, ${street} ${building}${unit ? '/'+unit : ''}`;
+   
+const unit =
+  field('NR_LOK') ||
+  field('NR_LOKALU') ||
+  record?.props?.LOK_NR_LOK ||
+  (record?.identyfikator?.match(/(?:^|[._])(\d+)_LOK$/i)?.[1] || '');
+
+   
+if (city && street && building) {
+  return `${city}, ${street} ${building}` +
+    (unit ? `, lokal ${unit}` : '');
+}
+
     return text.replace(/;/g, ', ').replace(/\b(MSC|UL|NR_PORZ|NR_LOK):/gi,'').trim()
       || 'Adres nieudostępniony w RCN';
   }
